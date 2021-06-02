@@ -13,5 +13,5 @@ pip3 install -r requirements
 ## Run
 We are using argparse, here is an example of how to run the script:
 ```bash
-python3 --data ./data/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv
+python3 anomaly.py --data ./data/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv
 ```

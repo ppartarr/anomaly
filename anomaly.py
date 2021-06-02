@@ -4,6 +4,7 @@
 from sklearn.ensemble import IsolationForest
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 import numpy as np
@@ -18,21 +19,25 @@ import logging as log
 log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S', level=log.INFO)
 
-# TODO tune the model by testing different hyperparameters
-def train(data):
-    x = data
+
+def train(x, y):
 
     # split dataset into train & test
     # TODO test stratification
-    x_train, x_test = train_test_split(
-        x, train_size=0.5, test_size=0.5, shuffle=False)
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, train_size=0.5, test_size=0.5, shuffle=False)
 
     log.info(x_train.shape)
     log.info(x_test.shape)
 
+    # model_tuning(x_train, y_train)
+
     # TODO test bootstrapping
-    iforest = IsolationForest(contamination=0.38, verbose=1)
-    x_pred_train = iforest.fit_predict(x_train)
+    iforest = IsolationForest(n_estimators=80,
+        max_features=30,
+        verbose=2)
+
+    x_pred_train = iforest.fit_predict(x_train,)
     x_pred_test = iforest.fit_predict(x_test)
     log.info(x_pred_train.shape)
     log.info(np.unique(x_pred_train, return_counts=True))
@@ -40,29 +45,58 @@ def train(data):
     log.info(np.unique(x_pred_test, return_counts=True))
 
 
+""" Tune the model by testing various hyperparameters using the GridSearchCV
+"""
+def model_tuning(x_train, y_train):
+    iforest = IsolationForest(verbose=1)
+
+    param_grid = {'n_estimators': [40, 60, 80],
+        'max_samples': ['auto'],
+        'contamination': ['auto'],
+        'max_features': [20, 30],
+        'bootstrap': [False],
+        'n_jobs': [-1]}
+
+    grid_search = GridSearchCV(iforest,
+        param_grid,
+        scoring="neg_mean_squared_error",
+        refit=True,
+        return_train_score=True,
+        verbose=1)
+
+    # TODO use labels to do supervised learning
+    best_model = grid_search.fit(x_train, y_train)
+
+    print('Best parameters', best_model.best_params_)
+
+
 def process_data(filepath):
     log.info('Opening {}...'.format(filepath))
     raw_data = pd.read_csv(filepath)
     
-    raw_data = raw_data.drop(['Label'], axis=1)
+    y = raw_data['Label']
+    y.replace('Bot', -1, inplace=True)
+    y.replace('Benign', 1, inplace=True)
+
+    x = raw_data.drop(['Label'], axis=1)
 
     # TODO convert timestamp to unix timestamp
-    raw_data = raw_data.drop(['Timestamp'], axis=1)
+    x = x.drop(['Timestamp'], axis=1)
 
     # find columns with NaN value and replace with 0
     # Flow Byts/s
-    nan_columns = raw_data.loc[:, raw_data.isna().any()].columns
+    nan_columns = x.loc[:, x.isna().any()].columns
     for column in nan_columns:
-        raw_data[column].fillna(0, inplace=True)
+        x[column].fillna(0, inplace=True)
 
     # find columns with Infinity value and replace with 0
     # Flow Byts/s
     # Flow Pkts/s
-    inf_columns = raw_data.columns.to_series()[np.isinf(raw_data).any()]
+    inf_columns = x.columns.to_series()[np.isinf(x).any()]
     for column in inf_columns:
         # replace Infinity with column max
-        inf = raw_data.loc[raw_data[column] != np.inf, column].max()
-        raw_data[column].replace(np.inf, inf, inplace=True)
+        inf = x.loc[x[column] != np.inf, column].max()
+        x[column].replace(np.inf, inf, inplace=True)
 
     # find columns with constant values and drop
     # Bwd PSH Flags
@@ -75,13 +109,13 @@ def process_data(filepath):
     # Bwd Byts/b Avg
     # Bwd Pkts/b Avg
     # Bwd Blk Rate Avg
-    for column in raw_data.columns:
-        if len(raw_data[column].value_counts()) == 1:
-            raw_data = raw_data.drop([column], axis=1)
+    for column in x.columns:
+        if len(x[column].value_counts()) == 1:
+            x = x.drop([column], axis=1)
 
-    log.info(raw_data.head())
+    log.info(x.head())
 
-    return raw_data
+    return x, y
 
 
 def parse_args():
@@ -96,5 +130,5 @@ def parse_args():
 # Total of 37.54% malicious packets...
 if __name__ == '__main__':
     args = parse_args()
-    raw_data = process_data(args.data)
-    train(raw_data)
+    x, y = process_data(args.data)
+    train(x, y)
