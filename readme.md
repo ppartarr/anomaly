@@ -32,3 +32,8 @@ Processed Traffic Data for ML Algorithms/Thuesday-20-02-2018_TrafficForML_CICFlo
 Processed Traffic Data for ML Algorithms/Friday-23-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 0.05400716978575566
 total percentage of malicious flows: 20.380819517930977
 ```
+
+## Best K features (k=30)
+```bash
+['Protocol', 'Flow Duration', 'Fwd Pkt Len Min', 'Bwd Pkt Len Max', 'Bwd Pkt Len Min', 'Bwd Pkt Len Mean', 'Bwd Pkt Len Std', 'Flow IAT Mean', 'Flow IAT Std', 'Flow IAT Max', 'Fwd IAT Tot', 'Fwd IAT Mean', 'Fwd IAT Max', 'Bwd IAT Tot', 'Bwd IAT Std', 'Pkt Len Min', 'Pkt Len Max', 'Pkt Len Mean', 'Pkt Len Std', 'Pkt Len Var', 'RST Flag Cnt', 'ACK Flag Cnt', 'ECE Flag Cnt', 'Pkt Size Avg', 'Bwd Seg Size Avg', 'Init Bwd Win Byts', 'Fwd Seg Size Min', 'Idle Mean', 'Idle Max', 'Idle Min']
+```

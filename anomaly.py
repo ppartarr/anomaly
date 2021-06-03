@@ -2,12 +2,11 @@
 # coding: utf-8
 
 from sklearn.ensemble import IsolationForest
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.metrics import roc_auc_score, plot_roc_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
+from sklearn.feature_selection import SelectKBest
 import numpy as np
 import pandas as pd
 import argparse
@@ -29,8 +28,11 @@ def train(x, y):
 
     # model_tuning(x_train, y_train)
 
+    # print(find_best_features(x, x_train, y_train))
+
     iforest = IsolationForest(n_estimators=80,
         max_features=30,
+        n_jobs=-1,
         verbose=1)
 
     estimator = iforest.fit(x_train)
@@ -42,6 +44,23 @@ def train(x, y):
     auc = roc_auc_score(y_test, guesses)
     print('area under the curve: {auc}'.format(auc=auc))
 
+    # plot_roc_curve(iforest, x_test, y_test)
+    # plt.show()
+
+
+def plot(x, y, guesses, col_name):
+    anomaly_indices = np.where(guesses == -1)
+    plt.scatter(x[:,0], x[:,1])
+    plt.scatter(x[anomaly_indices,0], x[anomaly_indices,1], edgecolors='r')
+    plt.show()
+
+
+def find_best_features(x, x_train, y_train):
+    select = SelectKBest(k=30)
+    selected_features = select.fit(x_train, y_train)
+    indices_selected = selected_features.get_support(indices=True)
+    col_names_selected = [x.columns[i] for i in indices_selected]
+    return col_names_selected
 
 
 def model_tuning(x_train, y_train):
@@ -72,19 +91,27 @@ def model_tuning(x_train, y_train):
 def process_labels(y):
     """Convert the labels into numerical values"""
 
+    log.info('Processing labels...')
+
     # set all malicious labels to -1
-    y.replace('Bot', -1, inplace=True)
-    y.replace('DoS GoldenEye', -1, inplace=True)
-    y.replace('Heartbleed', -1, inplace=True)
-    y.replace('DoS Hulk', -1, inplace=True)
-    y.replace('DoS Slowhttp', -1, inplace=True)
-    y.replace('DoS slowloris', -1, inplace=True)
-    y.replace('SSH-Patator', -1, inplace=True)
-    y.replace('FTP-Patator', -1, inplace=True)
-    y.replace('Web Attack', -1, inplace=True)
-    y.replace('Infiltration', -1, inplace=True)
-    y.replace('PortScan', -1, inplace=True)
-    y.replace('DDoS', -1, inplace=True)
+    # label names obtained from stats.py
+    anomaly_labels = [
+        'DoS attacks-SlowHTTPTest',
+        'DoS attacks-GoldenEye',
+        'DoS attacks-Hulk',
+        'DoS attacks-Slowloris',
+        'DDOS attack-LOIC-UDP',
+        'DDoS attacks-LOIC-HTTP',
+        'DDOS attack-HOIC',
+        'SSH-Bruteforce',
+        'Brute Force -Web',
+        'Brute Force -XSS',
+        'FTP-BruteForce',
+        'SQL Injection',
+        'Bot',
+        'Infilteration'
+    ]
+    y.replace(anomaly_labels, -1, inplace=True)
 
     # set normal label to 1
     y.replace('Benign', 1, inplace=True)
@@ -94,23 +121,30 @@ def process_labels(y):
 
 def process_infinity(x):
     """Replace all the Infinity values with the column's max"""
+    log.info('Processing Infinity values...')
     inf_columns = x.columns[np.isinf(x).any()]
     for column in inf_columns:
         # replace Infinity with column max
         inf = x.loc[x[column] != np.inf, column].max()
         x[column].replace(np.inf, inf, inplace=True)
-    
+
     return x
 
 
 def process_nan(x):
     """Replace all the NaN values with the column's median"""
+    log.info('Processing NaN values...')
     nan_columns = x.loc[:, x.isna().any()].columns
     for column in nan_columns:
         x[column].fillna(0, inplace=True)
     # imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
     # x = pd.DataFrame(data=imputer.transform(x.values), columns=x.columns)
     return x
+
+
+def date_to_timestamp(date):
+    """Convert a date in the following format 02/03/2018 08:47:38 to a unix timestamp"""
+    return pd.Timestamp(date).timestamp()
 
 
 def process_data(filepath):
@@ -122,9 +156,11 @@ def process_data(filepath):
     y = process_labels(raw_data['Label'])
 
     # TODO convert timestamp to unix timestamp
-    x = raw_data.drop(['Timestamp'], axis=1)
+    # x = raw_data.drop(['Timestamp'], axis=1)
+    raw_data['Timestamp'] = raw_data['Timestamp'].apply(date_to_timestamp)
+    raw_data.drop(['Label'], axis=1, inplace=True)
 
-    x.drop(['Label'], axis=1, inplace=True)
+    x = raw_data
     x = process_nan(x)
     x = process_infinity(x)
 
