@@ -16,7 +16,11 @@ We are using argparse, here is an example of how to run the script:
 python3 anomaly.py --data ./data/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv
 ```
 
-## Anomaly count
+## Dataset
+We are using a dataset purpose-built for training Intrusion Detection Systems published by the Canadian Institute for Cybersecurity: https://www.unb.ca/cic/datasets/ids-2018.html
+
+### Anomaly count
+The [stats.py](stats.py) script will calculates the number of labelled anomalies in the dataset and calculates the total percentage accross the dataset
 ```bash
 λ  philippe@srv11013 9:22:48  /mnt/storage/ids-2018/dataset  python3 stats.py --dir Processed\ Traffic\ Data\ for\ ML\ Algorithms
 Processed Traffic Data for ML Algorithms/Wednesday-21-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 190.5984208761394
@@ -33,7 +37,7 @@ Processed Traffic Data for ML Algorithms/Friday-23-02-2018_TrafficForML_CICFlowM
 total percentage of malicious flows: 20.380819517930977
 ```
 
-## Best K features (k=30)
+### Best K features (k=30)
 ```bash
 ['Protocol', 'Flow Duration', 'Fwd Pkt Len Min', 'Bwd Pkt Len Max', 'Bwd Pkt Len Min', 'Bwd Pkt Len Mean', 'Bwd Pkt Len Std', 'Flow IAT Mean', 'Flow IAT Std', 'Flow IAT Max', 'Fwd IAT Tot', 'Fwd IAT Mean', 'Fwd IAT Max', 'Bwd IAT Tot', 'Bwd IAT Std', 'Pkt Len Min', 'Pkt Len Max', 'Pkt Len Mean', 'Pkt Len Std', 'Pkt Len Var', 'RST Flag Cnt', 'ACK Flag Cnt', 'ECE Flag Cnt', 'Pkt Size Avg', 'Bwd Seg Size Avg', 'Init Bwd Win Byts', 'Fwd Seg Size Min', 'Idle Mean', 'Idle Max', 'Idle Min']
 ```
