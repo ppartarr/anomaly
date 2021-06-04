@@ -22,19 +22,18 @@ We are using a dataset purpose-built for training Intrusion Detection Systems pu
 ### Anomaly count
 The [stats.py](stats.py) script will calculates the number of labelled anomalies in the dataset and calculates the total percentage accross the dataset
 ```bash
-λ  philippe@srv11013 9:22:48  /mnt/storage/ids-2018/dataset  python3 stats.py --dir Processed\ Traffic\ Data\ for\ ML\ Algorithms
-Processed Traffic Data for ML Algorithms/Wednesday-21-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 190.5984208761394
-Processed Traffic Data for ML Algorithms/Thursday-15-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 5.270476077652631
-Processed Traffic Data for ML Algorithms/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 37.53895674620664
-sys:1: DtypeWarning: Columns (0,1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78) have mixed types.Specify dtype option on import or set low_memory=False.
-Processed Traffic Data for ML Algorithms/Thursday-01-03-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 39.10652545612657
-Processed Traffic Data for ML Algorithms/Wednesday-14-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 57.06024031418788
-Processed Traffic Data for ML Algorithms/Friday-16-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 134.70024979184015
-Processed Traffic Data for ML Algorithms/Wednesday-28-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 12.661521499448734
-Processed Traffic Data for ML Algorithms/Thursday-22-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 0.03453496569876542
-Processed Traffic Data for ML Algorithms/Thuesday-20-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 7.815348189237466
-Processed Traffic Data for ML Algorithms/Friday-23-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 0.05400716978575566
-total percentage of malicious flows: 20.380819517930977
+root@srv11013:/mnt/storage/ids-2018/dataset# python3 stats.py --dir Processed\ Traffic\ Data\ for\ ML\ Algorithms/
+Processed Traffic Data for ML Algorithms/Wednesday-21-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 65.5882507212169
+Processed Traffic Data for ML Algorithms/Thursday-15-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 5.00660420093937
+Processed Traffic Data for ML Algorithms/Thursday-20-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 7.24882711088589
+Processed Traffic Data for ML Algorithms/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 27.293326657606755
+Processed Traffic Data for ML Algorithms/Thursday-01-03-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 28.112646281615707
+Processed Traffic Data for ML Algorithms/Wednesday-14-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 36.33016236320721
+Processed Traffic Data for ML Algorithms/Friday-16-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 57.39246119733925
+Processed Traffic Data for ML Algorithms/Wednesday-28-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 11.238550066546622
+Processed Traffic Data for ML Algorithms/Thursday-22-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 0.03452304317764585
+Processed Traffic Data for ML Algorithms/Friday-23-02-2018_TrafficForML_CICFlowMeter.csv percentage of malicious flows: 0.05397801778604296
+total percentage of malicious flows: 10.190409758965489
 ```
 
 ### Best K features (k=30)

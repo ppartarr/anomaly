@@ -23,10 +23,10 @@ def stats(data_dir_path):
 
         unique_labels = unique_labels.union(set(data['Label'].unique()))
 
-        print('{file} percentage of malicious flows: {percentage}'.format(file=file, percentage=100*(anom/benign)))
+        print('{file} percentage of malicious flows: {percentage}'.format(file=file, percentage=100*(anom/(benign + anom))))
 
     # 16.93
-    print('total percentage of malicious flows: {percentage}'.format(percentage=100*(total_anom/total_benign)))
+    print('total percentage of malicious flows: {percentage}'.format(percentage=100*(total_anom/(total_benign + total_benign))))
     print('unique labels: {unique}'.format(unique=unique_labels))
 
 
