@@ -65,18 +65,17 @@ def process_infinity(x):
         # replace Infinity with column max
         inf = x.loc[x[column] != np.inf, column].max()
         x[column].replace(np.inf, inf, inplace=True)
-
     return x
 
 
 def process_nan(x):
     """Replace all the NaN values with the column's median"""
     log.info('Processing NaN values...')
-    nan_columns = x.loc[:, x.isna().any()].columns
-    for column in nan_columns:
-        x[column].fillna(0, inplace=True)
-    # imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
-    # x = pd.DataFrame(data=imputer.transform(x.values), columns=x.columns)
+    # nan_columns = x.loc[:, x.isna().any()].columns
+    # for column in nan_columns:
+    #     x[column].fillna(0, inplace=True)
+    imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
+    x = pd.DataFrame(data=imputer.fit_transform(x.values), columns=x.columns)
     return x
 
 
@@ -89,18 +88,18 @@ def process_data(filepath):
     """Ingest the raw csv data and run pre-processing tasks"""
 
     log.info('Opening {}...'.format(filepath))
+    # TODO ingest file in chunks
     raw_data = pd.read_csv(filepath)
 
     y = process_labels(raw_data['Label'])
 
-    # TODO convert timestamp to unix timestamp
     # x = raw_data.drop(['Timestamp'], axis=1)
     raw_data['Timestamp'] = raw_data['Timestamp'].apply(date_to_timestamp)
     raw_data.drop(['Label'], axis=1, inplace=True)
 
     x = raw_data
-    x = process_nan(x)
     x = process_infinity(x)
+    x = process_nan(x)
 
     # find columns with constant values and drop
     for column in x.columns:
