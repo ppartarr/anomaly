@@ -49,9 +49,12 @@ def train_gmm(x, y, x_train, x_test, y_train, y_test):
 def train_iforest(x, y, x_train, x_test, y_train, y_test):
     """Train & test the Isolation Forest model"""
     log.info('Training the Isolation Forest')
+    contamination = 1 - ((y.value_counts()[1]) / len(y))
+    log.info('contamination rate: {contam:0.2f}%'.format(contam=100*contamination))
     iforest = IsolationForest(n_estimators=80,
         max_features=30,
-        n_jobs=4,
+        contamination=contamination,
+        n_jobs=1,
         verbose=1)
 
     classifier = iforest.fit(x_train)
