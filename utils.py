@@ -3,6 +3,8 @@
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import roc_auc_score, f1_score
 import numpy as np
 import pandas as pd
 import argparse
@@ -11,6 +13,17 @@ import logging as log
 
 log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S', level=log.INFO)
+
+
+def print_stats(y, guesses, y_test):
+    log.info('guess percentage of anomalies: {percentage:.2f}'.format(percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
+    log.info('actual percentage of anomalies: {percentage:.2f}'.format(percentage=(100 - (100 * (y.value_counts()[1])) / len(y))))
+
+    auc = roc_auc_score(y_test, guesses)
+    print('area under the curve: {auc}'.format(auc=auc))
+
+    f1 = f1_score(y_test, guesses)
+    print('f1 score: {f1}'.format(f1=f1))
 
 
 def process_labels(y):

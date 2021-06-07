@@ -43,11 +43,7 @@ def train_gmm(x, y, x_train, x_test, y_train, y_test):
     classifier = gmm.fit(x_train)
     guesses = classifier.predict(x_test)
 
-    log.info('guess percentage of anomalies: {percentage:.2f}'.format(percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
-    log.info('actual percentage of anomalies: {percentage:.2f}'.format(percentage=((len(y) - y.value_counts()[1])*100) / y.value_counts()[1]))
-
-    auc = roc_auc_score(y_test, guesses)
-    print('area under the curve: {auc}'.format(auc=auc))
+    print_stats(y, guesses, y_test)
 
 
 def train_iforest(x, y, x_train, x_test, y_train, y_test):
@@ -61,11 +57,7 @@ def train_iforest(x, y, x_train, x_test, y_train, y_test):
     classifier = iforest.fit(x_train)
     guesses = classifier.predict(x_test)
 
-    log.info('guess percentage of anomalies: {percentage:.2f}'.format(percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
-    log.info('actual percentage of anomalies: {percentage:.2f}'.format(percentage=((len(y) - y.value_counts()[1])*100) / y.value_counts()[1]))
-
-    auc = roc_auc_score(y_test, guesses)
-    print('area under the curve: {auc}'.format(auc=auc))
+    print_stats(y, guesses, y_test)
 
 
 def find_best_features(x, x_train, y_train):
