@@ -23,6 +23,7 @@ lazy-object-proxy==1.6.0
 Markdown==3.3.4
 matplotlib==3.4.2
 mccabe==0.6.1
+netaddr==0.8.0
 numpy==1.19.5
 oauthlib==3.1.0
 opt-einsum==3.3.0

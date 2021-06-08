@@ -7,8 +7,10 @@ from sklearn.metrics import roc_auc_score, plot_roc_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
 from sklearn.mixture import GaussianMixture
-from model import train_gmm, train_iforest, train_gboost, gmm_tuning, iforest_tuning
-from utils import process_csv
+from models.isolation_forest import train_iforest, train_iforest_without_labels, tune_iforest
+from models.gradient_boost import train_gboost
+from models.gaussian_mixture import train_gmm, gmm_tuning
+from utils import process_csv, process_pcap
 from datetime import datetime
 from functools import reduce
 
@@ -30,17 +32,23 @@ log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
 def train(x, y):
     """Train the model and calculate performance metrics"""
     # split dataset into train & test
-    x_train, x_test, y_train, y_test = train_test_split(
-        x, y, test_size=0.2, shuffle=False)
+    if y != None:
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y, test_size=0.2, shuffle=False)
 
-    # print(find_best_features(x, x_train, y_train))
-    # model_tuning(x_train, y_train)
+        # print(find_best_features(x, x_train, y_train))
+        # tune_iforest(x_train, y_train)
 
-    # gmm_tuning(x_train, y_train)
+        # gmm_tuning(x_train, y_train)
 
-    train_iforest(x, y, x_train, x_test, y_train, y_test)
-    # train_gmm(x, y, x_train, x_test, y_train, y_test)
-    # train_gboost(x, y, x_train, x_test, y_train, y_test)
+        train_iforest(x, y, x_train, x_test, y_train, y_test)
+        # train_gmm(x, y, x_train, x_test, y_train, y_test)
+        # train_gboost(x, y, x_train, x_test, y_train, y_test)
+    else:
+        x_train, x_test = train_test_split(
+            x, test_size=0.2, shuffle=False)
+
+        train_iforest_without_labels(x, x_train, x_test)
 
 
 def plot(x, y, guesses, col_name):
