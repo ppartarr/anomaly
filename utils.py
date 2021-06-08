@@ -84,11 +84,18 @@ def date_to_timestamp(date):
     return pd.Timestamp(date).timestamp()
 
 
-def process_data(filepath):
+def drop_constant_columns(x):
+    """Remove the columns with constant values"""
+    for column in x.columns:
+        if len(x[column].value_counts()) == 1:
+            x = x.drop([column], axis=1)
+    return x
+
+
+def process_csv(filepath):
     """Ingest the raw csv data and run pre-processing tasks"""
 
     log.info('Opening {}...'.format(filepath))
-    # TODO ingest file in chunks
     raw_data = pd.read_csv(filepath)
 
     y = process_labels(raw_data['Label'])
@@ -101,9 +108,7 @@ def process_data(filepath):
     x = process_infinity(x)
     x = process_nan(x)
 
-    # find columns with constant values and drop
-    for column in x.columns:
-        if len(x[column].value_counts()) == 1:
-            x = x.drop([column], axis=1)
+    # NOTE: don't drop columns when reading from multiple files since value might vary across files
+    # x = drop_constant_columns(x)
 
     return x, y
