@@ -91,9 +91,9 @@ if __name__ == '__main__':
             pd.concat([x[1], y[1]], ignore_index=True)
         ), out)
         train(x, y)
-    # elif args.pcap:
-    #     x, y = process_pcap(args.pcap)
-
+    elif args.pcap:
+        x, y = process_pcap(args.pcap)
+        train(x, y)
 
     end_time = datetime.now()
     print('Execution time: {time}'.format(time=(end_time - start_time)))
