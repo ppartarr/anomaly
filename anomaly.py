@@ -9,7 +9,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.mixture import GaussianMixture
 from models.isolation_forest import train_iforest, train_iforest_without_labels, tune_iforest
 from models.gradient_boost import train_gboost
-from models.gaussian_mixture import train_gmm, gmm_tuning
+from models.gaussian_mixture import train_gmm, tune_gmm
 from utils import process_csv, process_pcap
 from datetime import datetime
 from functools import reduce

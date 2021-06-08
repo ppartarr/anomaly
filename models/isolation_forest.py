@@ -9,7 +9,7 @@ from sklearn.mixture import GaussianMixture
 import numpy as np
 import logging as log
 
-from anomaly.models.utils import print_stats
+from .stats import print_stats
 
 
 log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',

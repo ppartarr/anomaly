@@ -7,7 +7,7 @@ from sklearn.model_selection import GridSearchCV
 
 import logging as log
 
-from anomaly.models.utils import print_stats
+from .stats import print_stats
 
 log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S', level=log.INFO)
@@ -28,7 +28,7 @@ def train_gmm(x, y, x_train, x_test, y_train, y_test):
     print_stats(y, guesses, y_test)
 
 
-def gmm_tuning(x_train, y_train):
+def tune_gmm(x_train, y_train):
     """ Tune the model by testing various hyperparameters using the GridSearchCV"""
 
     gmm = GaussianMixture(verbose=1)

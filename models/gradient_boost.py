@@ -5,7 +5,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 import logging as log
 
-from anomaly.models.utils import print_stats
+from .stats import print_stats
 
 
 log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
