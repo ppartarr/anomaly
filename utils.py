@@ -7,7 +7,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 
-from columns import dtypes
+from columns import csv_dtypes, pcap_dtypes
+from stats.network import NetworkStatistics
 
 import numpy as np
 import pandas as pd
@@ -106,7 +107,7 @@ def process_csv(filepath):
     log.info('Opening {}...'.format(filepath))
 
     # NOTE: we cannot use dtype & converters so we convert the columns manually later
-    chunks = pd.read_csv(filepath, dtype=dtypes, chunksize=1000000)
+    chunks = pd.read_csv(filepath, dtype=csv_dtypes, chunksize=1000000)
 
     x_list = []
     y_list = []
