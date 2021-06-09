@@ -32,7 +32,7 @@ log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
 def train(x, y):
     """Train the model and calculate performance metrics"""
     # split dataset into train & test
-    if y != None:
+    if not y.empty:
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.2, shuffle=False)
 
@@ -92,8 +92,8 @@ if __name__ == '__main__':
         ), out)
         train(x, y)
     elif args.pcap:
-        x, y = process_pcap(args.pcap)
-        train(x, y)
+        x = process_pcap(args.pcap)
+        train(x, pd.DataFrame())
 
     end_time = datetime.now()
     print('Execution time: {time}'.format(time=(end_time - start_time)))
