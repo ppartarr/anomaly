@@ -7,6 +7,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 
+from columns import dtypes
+
 import numpy as np
 import pandas as pd
 import argparse
@@ -93,26 +95,41 @@ def drop_constant_columns(x):
     return x
 
 
+def drop_invalid_rows(x):
+    """The CIC 2018 dataset network flow data has invalid rows which are a duplicate of the csv headers - drop them!"""
+    return x[x.Timestamp != 'Timestamp']
+
+
 def process_csv(filepath):
     """Ingest the raw csv data and run pre-processing tasks"""
 
     log.info('Opening {}...'.format(filepath))
-    raw_data = pd.read_csv(filepath)
 
-    y = process_labels(raw_data['Label'])
+    # NOTE: we cannot use dtype & converters so we convert the columns manually later
+    chunks = pd.read_csv(filepath, dtype=dtypes, chunksize=1000000)
 
-    # x = raw_data.drop(['Timestamp'], axis=1)
-    raw_data['Timestamp'] = raw_data['Timestamp'].apply(date_to_timestamp)
-    raw_data.drop(['Label'], axis=1, inplace=True)
+    x_list = []
+    y_list = []
 
-    x = raw_data
-    x = process_infinity(x)
-    x = process_nan(x)
+    for chunk in chunks:
+        chunk = drop_invalid_rows(chunk)
 
-    # NOTE: don't drop columns when reading from multiple files since value might vary across files
-    # x = drop_constant_columns(x)
+        y = process_labels(chunk.Label)
 
-    return x, y
+        # x = chunk.drop(['Timestamp'], axis=1)
+        chunk.Timestamp = chunk.Timestamp.apply(date_to_timestamp)
+        chunk.drop(['Label'], axis=1, inplace=True)
+
+        x = chunk
+        x = process_infinity(x)
+        x = process_nan(x)
+
+        # NOTE: don't drop columns when reading from multiple files since value might vary across files
+        # x = drop_constant_columns(x)
+        x_list.append(x)
+        y_list.append(y)
+
+    return pd.concat(x_list), pd.concat(y_list)
 
 
 def process_pcap(filepath):
@@ -141,19 +158,21 @@ def process_pcap(filepath):
         log.error('File {filepath} is not a tsv or pcap file'.format(filepath=filepath))
         raise Exception()
 
-    # open readers
     raw_data = pd.read_table(tshark_filepath)
-
-    # y = process_labels(raw_data['Label'])
-
-    # x = raw_data.drop(['Timestamp'], axis=1)
-    # raw_data['Timestamp'] = raw_data['Timestamp'].apply(date_to_timestamp)
 
     x = raw_data
     # x = process_infinity(x)
     x = process_nan(x)
+    x = process_addresses(x)
 
-    # x['eth.src'].fillna(-1, inplace=True)
+    # NOTE: don't drop columns when reading from multiple files since value might vary across files
+    # x = drop_constant_columns(x)
+
+    return x
+
+
+def process_addresses(x):
+    """Convert MAC & IP addresses to decimal values"""
     x['eth.src'] = x['eth.src'].apply(mac_to_decimal)
     x['eth.dst'] = x['eth.dst'].apply(mac_to_decimal)
     x['arp.src.hw_mac'] = x['arp.src.hw_mac'].apply(mac_to_decimal)
@@ -167,11 +186,7 @@ def process_pcap(filepath):
 
     x['ipv6.src'] = x['ipv6.src'].apply(ipv6_to_decimal)
     x['ipv6.dst'] = x['ipv6.dst'].apply(ipv6_to_decimal)
-
-    # NOTE: don't drop columns when reading from multiple files since value might vary across files
-    x = drop_constant_columns(x)
-
-    return x, None
+    return x
 
 
 def get_tshark_path():
