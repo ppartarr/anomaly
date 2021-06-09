@@ -173,6 +173,7 @@ def process_pcap(filepath):
 
 def process_addresses(x):
     """Convert MAC & IP addresses to decimal values"""
+    log.info('Processing addresses...')
     x['eth.src'] = x['eth.src'].apply(mac_to_decimal)
     x['eth.dst'] = x['eth.dst'].apply(mac_to_decimal)
     x['arp.src.hw_mac'] = x['arp.src.hw_mac'].apply(mac_to_decimal)
@@ -201,8 +202,8 @@ def get_tshark_path():
 def pcap2tsv_with_tshark(tshark, filepath):
     print('Parsing with tshark...')
     fields = '-e frame.time_epoch -e frame.len -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e icmp.type -e icmp.code -e arp.opcode -e arp.src.hw_mac -e arp.src.proto_ipv4 -e arp.dst.hw_mac -e arp.dst.proto_ipv4 -e ipv6.src -e ipv6.dst'
-    cmd =  '"' + tshark + '" -r '+ filepath +' -T fields '+ fields +' -E header=y -E occurrence=f > '+filepath+".tsv"
-    subprocess.call(cmd,shell=True)
+    cmd = '"' + tshark + '" -r ' + filepath + ' -T fields ' + fields + ' -E header=y -E occurrence=f > '+filepath+".tsv"
+    subprocess.call(cmd, shell=True)
     print('tshark parsing complete. File saved as {filepath}.tsv'.format(filepath=filepath))
 
 
