@@ -159,17 +159,77 @@ def process_pcap(filepath):
         log.error('File {filepath} is not a tsv or pcap file'.format(filepath=filepath))
         raise Exception()
 
-    raw_data = pd.read_table(tshark_filepath)
+    raw_data = pd.read_table(tshark_filepath, dtype=pcap_dtypes)
 
     x = raw_data
     # x = process_infinity(x)
     x = process_nan(x)
     x = process_addresses(x)
 
+    # NOTE: comment out to disable additional statistical features from Kitsune
+    x = feature_engineering(x)
+
     # NOTE: don't drop columns when reading from multiple files since value might vary across files
     # x = drop_constant_columns(x)
 
     return x
+
+
+def feature_engineering(x):
+    """Add features based on network statistics"""
+    maxHost = 255
+    maxSess = 255
+    netStats = NetworkStatistics(np.nan, maxHost, maxSess)
+
+    x.apply(lambda row: feature_stats(row, netStats))
+
+    return x
+
+
+def feature_stats(row, netStats):
+    # print(row)
+    IPtype = np.nan
+    timestamp = row[0]
+    framelen = row[1]
+    srcIP = ''
+    dstIP = ''
+    if row[4] != '':  # IPv4
+        srcIP = row[4]
+        dstIP = row[5]
+        IPtype = 0
+    elif row[17] != '':  # ipv6
+        srcIP = row[17]
+        dstIP = row[18]
+        IPtype = 1
+    # UDP or TCP port: the concatenation of the two port strings will will results in an OR "[tcp|udp]"
+    srcproto = row[6] + row[8]
+    dstproto = row[7] + row[9]  # UDP or TCP port
+    srcMAC = row[2]
+    dstMAC = row[3]
+    if srcproto == '':  # it's a L2/L1 level protocol
+        if row[12] != '':  # is ARP
+            srcproto = 'arp'
+            dstproto = 'arp'
+            srcIP = row[14]  # src IP (ARP)
+            dstIP = row[16]  # dst IP (ARP)
+            IPtype = 0
+        elif row[10] != '':  # is ICMP
+            srcproto = 'icmp'
+            dstproto = 'icmp'
+            IPtype = 0
+        elif srcIP + srcproto + dstIP + dstproto == '':  # some other protocol
+            srcIP = row[2]  # src MAC
+            dstIP = row[3]  # dst
+
+    return netStats.update_get_stats(IPtype,
+                                     srcMAC,
+                                     dstMAC,
+                                     srcIP,
+                                     srcproto,
+                                     dstIP,
+                                     dstproto,
+                                     int(framelen),
+                                     float(timestamp))
 
 
 def process_addresses(x):
