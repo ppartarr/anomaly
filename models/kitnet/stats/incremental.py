@@ -1,3 +1,6 @@
+#!/home/philippe/src/anomaly/venv/bin/python3
+# coding: utf-8
+
 import math
 import numpy as np
 

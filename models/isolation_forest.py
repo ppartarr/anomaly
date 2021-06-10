@@ -12,10 +12,6 @@ import logging as log
 from .stats import print_stats
 
 
-log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S', level=log.INFO)
-
-
 def train_iforest(x, y, x_train, x_test, y_train, y_test):
     """Train & test the Isolation Forest model"""
     log.info('Training the Isolation Forest')
@@ -43,8 +39,8 @@ def train_iforest_without_labels(x, x_train, x_test):
 
     classifier = iforest.fit(x_train)
     guesses = classifier.predict(x_test)
+
     log.info(np.unique(guesses, return_counts=True))
-    # print_stats(guesses)
 
 
 def tune_iforest(x_train, y_train):

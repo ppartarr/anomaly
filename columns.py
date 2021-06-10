@@ -4,6 +4,10 @@
 import numpy as np
 
 csv_dtypes = {
+    'Flow ID': np.object,
+    'Src IP': np.object,
+    'Src Port': np.int16,
+    'Dst IP': np.object,
     'Dst Port': np.int16,
     'Protocol': np.int8,
     'Timestamp': np.object,

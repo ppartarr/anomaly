@@ -5,8 +5,7 @@ from sklearn.metrics import roc_auc_score, f1_score
 import logging as log
 import numpy as np
 
-log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S', level=log.INFO)
+log = log.getLogger(__name__)
 
 
 def find_best_features(x, x_train, y_train):

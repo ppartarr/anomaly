@@ -6,23 +6,20 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
+from ipaddress import IPv4Address, IPv6Address
 
 from columns import csv_dtypes, pcap_dtypes
-from stats.network import NetworkStatistics
+from models.kitnet.stats.network import NetworkStatistics
 
 import numpy as np
 import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
-import logging as log
 import os
 import subprocess
 import csv
 import sys
-import netaddr
-
-log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S', level=log.INFO)
+import logging as log
 
 
 def process_labels(y):
@@ -107,7 +104,7 @@ def process_csv(filepath):
     log.info('Opening {}...'.format(filepath))
 
     # NOTE: we cannot use dtype & converters so we convert the columns manually later
-    chunks = pd.read_csv(filepath, dtype=csv_dtypes, chunksize=1000000)
+    chunks = pd.read_csv(filepath, dtype=csv_dtypes, chunksize=500000)
 
     x_list = []
     y_list = []
@@ -120,6 +117,9 @@ def process_csv(filepath):
         # x = chunk.drop(['Timestamp'], axis=1)
         chunk.Timestamp = chunk.Timestamp.apply(date_to_timestamp)
         chunk.drop(['Label'], axis=1, inplace=True)
+
+        # TODO: use the Flow ID
+        chunk.drop(['Flow ID'], axis=1, inplace=True)
 
         x = chunk
         x = process_infinity(x)
@@ -280,7 +280,7 @@ def ipv4_to_decimal(ipv4_addr):
         return ipv4_addr
     else:
         # return struct.unpack('!L', socket.inet_aton(str(ipv4_addr)))[0]
-        return int(netaddr.IPAddress(ipv4_addr))
+        return int(IPv4Address(ipv4_addr))
 
 
 def ipv6_to_decimal(ipv6_addr):
@@ -289,4 +289,13 @@ def ipv6_to_decimal(ipv6_addr):
         return ipv6_addr
     else:
         # return struct.unpack('!L', socket.inet_aton(str(ipv6_addr)))[0]
-        return int(netaddr.IPAddress(ipv6_addr))
+        return int(IPv6Address(ipv6_addr))
+
+
+def convert_ip_address_to_decimal(ip_addr):
+    if ip_addr.version == 4:
+        return ipv4_to_decimal(ip_addr)
+    elif ip_addr.version == 6:
+        return ipv6_to_decimal(ip_addr)
+    else:
+        log.error('Cannot convert ip address {ip_addr} to decimal'.format(ip_addr=ip_addr))

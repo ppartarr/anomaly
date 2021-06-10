@@ -8,10 +8,6 @@ import logging as log
 from .stats import print_stats
 
 
-log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S', level=log.INFO)
-
-
 def train_gboost(x, y, x_train, x_test, y_train, y_test):
     """Train & test the Gradient Boosting Model"""
     log.info('Training the Gradient Boosting Model')
