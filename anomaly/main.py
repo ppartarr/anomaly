@@ -77,17 +77,19 @@ def plot(x, y, guesses, col_name):
 
 def parse_args():
     """Parse command line arguments"""
+    # TODO default for model, conn, socket
     parser = argparse.ArgumentParser(description='Anomaly-based Network Intrusion Detection')
     parser.add_argument('--model', choices=model_choice.keys(),
-                        help='Model to train & use', metavar='model', required=True)
+                        help='Model to train & use', metavar='model', required=True)  # default=model_choice['Kitsune']
     # NOTE: args for offline models
     parser.add_argument('--csv', help='csv file to read network flow data from')
     parser.add_argument('--dir', help='directory to read csv network flow data from')
     parser.add_argument('--pcap', help='pcap file to read data from')
     parser.add_argument('--tsv', help='tsv file to read data from')
     # NOTE: args for online models
-    parser.add_argument('--conn', help='Connection audit record file (netcap)')
-    parser.add_argument('--socket', action='store_true', help='read the data from a unix socket instead of a file')
+    parser.add_argument('--conn', help='Connection audit record file (netcap)')  # default='/tmp/Connection.sock'
+    parser.add_argument('--socket', action='store_true',
+                        help='read the data from a unix socket instead of a file')  # default=True
     return parser.parse_args()
 
 

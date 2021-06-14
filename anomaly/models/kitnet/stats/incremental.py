@@ -502,8 +502,7 @@ class StatisticsDB:
         return [str(Lambda) + "_" + s for s in hdrs]
 
     # cleans out records that have a weight less than the cutoff.
-    # returns number or removed records.
-
+    # returns number or removed records
     def clean_old_records(self, cutoffWeight, curTime):
         n = 0
         dump = sorted(

@@ -37,5 +37,6 @@ class SocketReader:
 
         row = self.sock.recv(self.buffer_size)
         if row:
+            row = row.decode('utf-8').split(',')
             self.current_packet_index += 1
             return row
