@@ -1,5 +1,6 @@
 .vscode/
 .venv/
-meeting/
+docs/
 todo.md
 **/__pycache__/
+anomaly.log

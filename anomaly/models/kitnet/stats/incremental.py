@@ -74,31 +74,31 @@ class Statistics:
 
     def cov(self, ID2):
         for cov in self.covs:
-            if cov.Statisticss[0].ID == ID2 or cov.Statisticss[1].ID == ID2:
+            if cov.Statistics[0].ID == ID2 or cov.Statistics[1].ID == ID2:
                 return cov.cov()
         return [np.nan]
 
     def pcc(self, ID2):
         for cov in self.covs:
-            if cov.Statisticss[0].ID == ID2 or cov.Statisticss[1].ID == ID2:
+            if cov.Statistics[0].ID == ID2 or cov.Statistics[1].ID == ID2:
                 return cov.pcc()
         return [np.nan]
 
     def cov_pcc(self, ID2):
         for cov in self.covs:
-            if cov.Statisticss[0].ID == ID2 or cov.Statisticss[1].ID == ID2:
+            if cov.Statistics[0].ID == ID2 or cov.Statistics[1].ID == ID2:
                 return cov.get_stats1()
         return [np.nan] * 2
 
-    def radius(self, other_Statisticss):  # the radius of a set of Statisticss
+    def radius(self, other_Statistics):  # the radius of a set of Statistics
         A = self.var()**2
-        for incS in other_Statisticss:
+        for incS in other_Statistics:
             A += incS.var()**2
         return math.sqrt(A)
 
-    def magnitude(self, other_Statisticss):  # the magnitude of a set of Statisticss
+    def magnitude(self, other_Statistics):  # the magnitude of a set of Statistics
         A = math.pow(self.mean(), 2)
-        for incS in other_Statisticss:
+        for incS in other_Statistics:
             A += math.pow(incS.mean(), 2)
         return math.sqrt(A)
 
@@ -115,7 +115,7 @@ class Statistics:
         # Find cov component
         stats2D = [np.nan] * 4
         for cov in self.covs:
-            if cov.Statisticss[0].ID == ID2 or cov.Statisticss[1].ID == ID2:
+            if cov.Statistics[0].ID == ID2 or cov.Statistics[1].ID == ID2:
                 stats2D = cov.get_stats2()
                 break
         return stats1D + stats2D
@@ -153,8 +153,8 @@ class StatisticsCovarience:
     """Similar to Statistics, but maintains stats between two streams"""
 
     def __init__(self, incS1, incS2, init_time=0):
-        # store references to the streams' Statisticss
-        self.Statisticss = [incS1, incS2]
+        # store references to the streams' Statistics
+        self.Statistics = [incS1, incS2]
         self.lastRes = [0, 0]
         # init extrapolators
         #self.EXs = [extrapolator(),extrapolator()]
@@ -170,16 +170,16 @@ class StatisticsCovarience:
     # [this si performed automatically in method Statistics.insert()]
     def update_cov(self, ID, v, t):
         # find Statistics
-        if ID == self.Statisticss[0].ID:
+        if ID == self.Statistics[0].ID:
             inc = 0
-        elif ID == self.Statisticss[1].ID:
+        elif ID == self.Statistics[1].ID:
             inc = 1
         else:
             print("update_cov ID error")
             return  # error
 
         # Decay other Statistics
-        self.Statisticss[not(inc)].process_decay(t)
+        self.Statistics[not(inc)].process_decay(t)
 
         # Decay residules
         self.process_decay(t, inc)
@@ -191,8 +191,8 @@ class StatisticsCovarience:
         #v_other = self.EXs[not(inc)].predict(t)
 
         # Compute and update residule
-        res = (v - self.Statisticss[inc].mean())
-        resid = (v - self.Statisticss[inc].mean()) * self.lastRes[not(inc)]
+        res = (v - self.Statistics[inc].mean())
+        resid = (v - self.Statistics[inc].mean()) * self.lastRes[not(inc)]
         self.CF3 += resid
         self.w3 += 1
         self.lastRes[inc] = res
@@ -203,7 +203,7 @@ class StatisticsCovarience:
         timeDiffs_cf3 = t - self.lastTimestamp_cf3
         if timeDiffs_cf3 > 0:
             factor = math.pow(
-                2, (-(self.Statisticss[micro_inc_indx].Lambda) * timeDiffs_cf3))
+                2, (-(self.Statistics[micro_inc_indx].Lambda) * timeDiffs_cf3))
             self.CF3 *= factor
             self.w3 *= factor
             self.lastTimestamp_cf3 = t
@@ -218,7 +218,7 @@ class StatisticsCovarience:
 
     # Pearson corl. coef
     def pcc(self):
-        ss = self.Statisticss[0].std() * self.Statisticss[1].std()
+        ss = self.Statistics[0].std() * self.Statistics[1].std()
         if ss != 0:
             return self.cov() / ss
         else:
@@ -231,33 +231,33 @@ class StatisticsCovarience:
     # calculates and pulls all correlative stats AND 2D stats from both
     # streams (Statistics)
     def get_stats2(self):
-        return [self.Statisticss[0].radius([self.Statisticss[1]]), self.Statisticss[0].magnitude([
-            self.Statisticss[1]]), self.cov(), self.pcc()]
+        return [self.Statistics[0].radius([self.Statistics[1]]), self.Statistics[0].magnitude([
+            self.Statistics[1]]), self.cov(), self.pcc()]
 
     # calculates and pulls all correlative stats AND 2D stats AND the regular
     # stats from both streams (Statistics)
     def get_stats3(self):
         return [
-            self.Statisticss[0].w,
-            self.Statisticss[0].mean(),
-            self.Statisticss[0].std(),
-            self.Statisticss[1].w,
-            self.Statisticss[1].mean(),
-            self.Statisticss[1].std(),
+            self.Statistics[0].w,
+            self.Statistics[0].mean(),
+            self.Statistics[0].std(),
+            self.Statistics[1].w,
+            self.Statistics[1].mean(),
+            self.Statistics[1].std(),
             self.cov(),
             self.pcc()]
 
     # calculates and pulls all correlative stats AND the regular stats from
-    # both Statisticss AND 2D stats
+    # both Statistics AND 2D stats
     def get_stats4(self):
-        return [self.Statisticss[0].w,
-                self.Statisticss[0].mean(),
-                self.Statisticss[0].std(),
-                self.Statisticss[1].w,
-                self.Statisticss[1].mean(),
-                self.Statisticss[1].std(),
-                self.Statisticss[0].radius([self.Statisticss[1]]),
-                self.Statisticss[0].magnitude([self.Statisticss[1]]),
+        return [self.Statistics[0].w,
+                self.Statistics[0].mean(),
+                self.Statistics[0].std(),
+                self.Statistics[1].w,
+                self.Statistics[1].mean(),
+                self.Statistics[1].std(),
+                self.Statistics[0].radius([self.Statistics[1]]),
+                self.Statistics[0].magnitude([self.Statistics[1]]),
                 self.cov(),
                 self.pcc()]
 
@@ -266,8 +266,8 @@ class StatisticsCovarience:
         s0 = "0"
         s1 = "1"
         if suffix:
-            s0 = self.Statisticss[0].ID
-            s1 = self.Statisticss[1].ID
+            s0 = self.Statistics[0].ID
+            s1 = self.Statistics[1].ID
 
         if ver == 1:
             headers = ["covariance_" + s0 + "_" + s1, "pcc_" + s0 + "_" + s1]
@@ -352,10 +352,10 @@ class StatisticsDB:
 
         # check for pre-exiting link
         for cov in incS1.covs:
-            if cov.Statisticss[0].ID == ID2 or cov.Statisticss[1].ID == ID2:
+            if cov.Statistics[0].ID == ID2 or cov.Statistics[1].ID == ID2:
                 return cov  # there is a pre-exiting link
 
-        # Link Statisticss
+        # Link Statistics
         inc_cov = StatisticsCovarience(incS1, incS2, init_time)
         incS1.covs.append(inc_cov)
         incS2.covs.append(inc_cov)
@@ -408,7 +408,7 @@ class StatisticsDB:
         IDs = []
         for cov in incS1.covs:
             stats.append(cov.get_stats1())
-            IDs.append([cov.Statisticss[0].ID, cov.Statisticss[1].ID])
+            IDs.append([cov.Statistics[0].ID, cov.Statistics[1].ID])
         return stats, IDs
 
     # Pulls current multidimensional stats from the given IDs
@@ -416,17 +416,17 @@ class StatisticsDB:
         # Default Lambda?
         Lambda = self.get_Lambda(Lambda)
 
-        # Get Statisticss
-        Statisticss = []
+        # Get Statistics
+        Statistics = []
         for ID in IDs:
             incS = self.HT.get(ID + "_" + str(Lambda))
             if incS is not None:  # exists
-                Statisticss.append(incS)
+                Statistics.append(incS)
 
         # Compute stats
         rad = 0  # radius
         mag = 0  # magnitude
-        for incS in Statisticss:
+        for incS in Statistics:
             rad += incS.var()
             mag += incS.mean()**2
 
@@ -477,10 +477,10 @@ class StatisticsDB:
         if IDs is None:
             IDs = [0, 1]
         hdrs = StatisticsCovarience(
-            Statistics(
-                Lambda, IDs[0]), Statistics(
-                Lambda, IDs[0]), Lambda).get_headers(
-            ver, suffix=False)
+            Statistics(Lambda, IDs[0]),
+            Statistics(Lambda, IDs[0]),
+            Lambda
+        ).get_headers(ver, suffix=False)
         return [str(Lambda) + "_" + s for s in hdrs]
 
     def get_headers_1D2D(self, Lambda=1, IDs=None, ver=1):

@@ -6,10 +6,12 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
-from ipaddress import IPv4Address, IPv6Address
 
 from columns import csv_dtypes, pcap_dtypes
-from models.kitnet.stats.network import NetworkStatistics
+from anomaly.models.kitnet.stats.network import NetworkStatistics
+import config
+
+from ipaddress import IPv4Address, IPv6Address
 
 import numpy as np
 import pandas as pd
@@ -20,6 +22,8 @@ import subprocess
 import csv
 import sys
 import logging as log
+
+log = log.getLogger(__name__)
 
 
 def process_labels(y):
@@ -104,7 +108,7 @@ def process_csv(filepath):
     log.info('Opening {}...'.format(filepath))
 
     # NOTE: we cannot use dtype & converters so we convert the columns manually later
-    chunks = pd.read_csv(filepath, dtype=csv_dtypes, chunksize=500000)
+    chunks = pd.read_csv(filepath, dtype=csv_dtypes, chunksize=config.chunksize)
 
     x_list = []
     y_list = []
@@ -118,8 +122,9 @@ def process_csv(filepath):
         chunk.Timestamp = chunk.Timestamp.apply(date_to_timestamp)
         chunk.drop(['Label'], axis=1, inplace=True)
 
-        # TODO: use the Flow ID
-        chunk.drop(['Flow ID'], axis=1, inplace=True)
+        if 'Flow ID' in chunk.columns:
+            # TODO: use the Flow ID
+            chunk.drop(['Flow ID'], axis=1, inplace=True)
 
         x = chunk
         x = process_infinity(x)
@@ -279,7 +284,6 @@ def ipv4_to_decimal(ipv4_addr):
     if ipv4_addr == -1:
         return ipv4_addr
     else:
-        # return struct.unpack('!L', socket.inet_aton(str(ipv4_addr)))[0]
         return int(IPv4Address(ipv4_addr))
 
 
@@ -288,7 +292,6 @@ def ipv6_to_decimal(ipv6_addr):
     if ipv6_addr == -1:
         return ipv6_addr
     else:
-        # return struct.unpack('!L', socket.inet_aton(str(ipv6_addr)))[0]
         return int(IPv6Address(ipv6_addr))
 
 

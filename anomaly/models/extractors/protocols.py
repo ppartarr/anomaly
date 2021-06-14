@@ -10,6 +10,7 @@ def convert_protocol_name_to_number(protocol_name):
 
 # Taken from /etc/protocols
 protocol_numbers = {
+    'Empty': -1,
     'HOPOPT': 0,
     'ICMP': 1,
     'IGMP': 2,
@@ -144,5 +145,10 @@ protocol_numbers = {
     'WESP': 141,
     'ROHC': 142,
     'Ethernet': 143,
+    # NOTE: manually added protocols
+    'NTP': 251,
+    'SIP': 252,
+    'Payload': 253,
+    'DNS': 254,
     'Reserved': 255
 }

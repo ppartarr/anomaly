@@ -54,8 +54,8 @@ class ConnectionStatistics:
         # Host-Host BW: Stats on the dual traffic behavior between srcIP and dstIP
         PortPort = np.zeros((7*len(self.Lambdas,)))
         for i in range(len(self.Lambdas)):
-            PortPort[(i*7):((i+1)*7)] = self.Port.update_get_1D2D_stats(connection.srcIP + connection.srcProtocol,
-                                                                        connection.dstIP + connection.dstProtocol, connection.timestamp_start, connection.total_size, self.Lambdas[i])
+            PortPort[(i*7):((i+1)*7)] = self.Port.update_get_1D2D_stats(connection.srcIP + connection.application_protocol,
+                                                                        connection.dstIP + connection.application_protocol, connection.timestamp_start, connection.total_size, self.Lambdas[i])
 
         return np.concatenate((MACandIP, HostHost, HostHostJitter, PortPort))
 
