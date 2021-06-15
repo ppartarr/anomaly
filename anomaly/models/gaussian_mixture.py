@@ -4,6 +4,7 @@
 from sklearn.feature_selection import SelectKBest
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import silhouette_score
 
 import logging as log
 
@@ -82,7 +83,7 @@ class GMix:
 
         grid_search = GridSearchCV(self.gmm,
                                    param_grid,
-                                   scoring="silhouette_score",
+                                   scoring=silhouette_score,
                                    refit=True,
                                    return_train_score=True,
                                    verbose=1)
