@@ -7,6 +7,7 @@ from anomaly.models.gaussian_mixture import GMix
 from anomaly.models.local_outlier_factor import LOF
 from anomaly.models.svm import SVM
 from anomaly.models.kitsune import Kitsune
+from anomaly.models.half_space_tree import HSTree
 
 model_choice = {
     # offline
@@ -14,12 +15,13 @@ model_choice = {
     'GBoost': GBoost,
     'LOF': LOF,
     'GMix': GMix,
-    'RobustCovariance': RobustCovariance,
     'SVM': SVM,
+    'Offline': [IForest, GBoost, LOF, GMix, SVM],
     # online
-    'Kitsune': Kitsune
+    'Kitsune': Kitsune,
+    'HSTree': HSTree
 }
 
 
 def is_model_online(model):
-    return model == 'Kitsune'
+    return model == 'Kitsune' or model == 'HSTree'

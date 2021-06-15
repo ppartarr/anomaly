@@ -3,16 +3,13 @@
 
 import logging as log
 import numpy as np
-from ipaddress import IPv4Address, IPv6Address, ip_address
 
 from anomaly.models.extractors.protocols import convert_protocol_name_to_number
 from anomaly.models.kitnet.stats.connection import ConnectionStatistics
-from anomaly.models.readers.csv import CSVReader  # , SocketReader
+from anomaly.utils import mac_to_decimal, ipv4_to_decimal, ipv6_to_decimal, convert_ip_address_to_decimal
 
 
 class ConnectionFeatureExtractor:
-    SOCKET_NAME = 'Connection.sock'
-
     def __init__(self, path, reader, limit=np.inf):
         self.path = path
         self.reader = reader(path, limit)
@@ -129,42 +126,3 @@ def check_numeric_empty(data):
         return -1
     else:
         return data
-
-# TODO: remove duplicate code and use utils once imports are fixed
-
-
-def mac_to_decimal(mac_addr):
-    if mac_addr == -1:
-        return mac_addr
-    else:
-        return int(str(mac_addr).replace(':', ''), 16)
-
-
-def ipv4_to_decimal(ipv4_addr):
-    if ipv4_addr == -1:
-        return ipv4_addr
-    else:
-        # return struct.unpack('!L', socket.inet_aton(str(ipv4_addr)))[0]
-        return int(IPv4Address(ipv4_addr))
-
-
-def ipv6_to_decimal(ipv6_addr):
-    # print(ipv6_addr)
-    if ipv6_addr == -1:
-        return ipv6_addr
-    else:
-        # return struct.unpack('!L', socket.inet_aton(str(ipv6_addr)))[0]
-        return int(IPv6Address(ipv6_addr))
-
-
-def convert_ip_address_to_decimal(ip_addr):
-    if ip_addr == -1:
-        return -1
-    else:
-        ip_addr = ip_address(ip_addr)
-        if ip_addr.version == 4:
-            return ipv4_to_decimal(ip_addr)
-        elif ip_addr.version == 6:
-            return ipv6_to_decimal(ip_addr)
-        else:
-            log.error('Cannot convert ip address {ip_addr} to decimal'.format(ip_addr=ip_addr))

@@ -7,7 +7,7 @@ from sklearn.model_selection import GridSearchCV
 
 import logging as log
 
-from anomaly.models.stats import print_stats
+from anomaly.models.stats import print_stats_labelled
 
 
 class GMix:

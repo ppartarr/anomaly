@@ -11,6 +11,8 @@ pip3 install -r requirements
 ```
 
 ### Set the PYTHONPATH
+**Question: I'm getting `ModuleNotFoundError: No module named 'anomaly'` when running the program**
+Answer: Set the python path as shown below
 ```bash
 export PYTHONPATH=`/path/to/project/root
 ```

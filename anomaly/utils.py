@@ -7,11 +7,11 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 
-from columns import csv_dtypes, pcap_dtypes
+from anomaly.columns import csv_dtypes, pcap_dtypes
 from anomaly.models.kitnet.stats.network import NetworkStatistics
-import config
+import anomaly.config as config
 
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 
 import numpy as np
 import pandas as pd
@@ -124,7 +124,10 @@ def process_csv(filepath):
 
         if 'Flow ID' in chunk.columns:
             # TODO: use the Flow ID
-            chunk.drop(['Flow ID'], axis=1, inplace=True)
+            chunk['Flow ID'] = chunk['Flow ID'].astype('category').cat.codes
+            chunk['Src IP'] = chunk['Src IP'].apply(convert_ip_address_to_decimal)
+            chunk['Dst IP'] = chunk['Dst IP'].apply(convert_ip_address_to_decimal)
+            # chunk.drop(['Flow ID'], axis=1, inplace=True)
 
         x = chunk
         x = process_infinity(x)
@@ -164,20 +167,23 @@ def process_pcap(filepath):
         log.error('File {filepath} is not a tsv or pcap file'.format(filepath=filepath))
         raise Exception()
 
-    raw_data = pd.read_table(tshark_filepath, dtype=pcap_dtypes)
+    chunks = pd.read_table(tshark_filepath, dtype=pcap_dtypes, chunksize=config.chunksize)
 
-    x = raw_data
-    # x = process_infinity(x)
-    x = process_nan(x)
-    x = process_addresses(x)
+    x_list = []
 
-    # NOTE: comment out to disable additional statistical features from Kitsune
-    x = feature_engineering(x)
+    for chunk in chunks:
+        x = chunk
+        # x = process_infinity(x)
+        x = process_nan(x)
+        x = process_addresses(x)
+
+        # NOTE: comment out to disable additional statistical features from Kitsune
+        x = feature_engineering(x)
+        x_list.append(x)
 
     # NOTE: don't drop columns when reading from multiple files since value might vary across files
     # x = drop_constant_columns(x)
-
-    return x
+    return pd.concat(x_list)
 
 
 def feature_engineering(x):
@@ -288,7 +294,6 @@ def ipv4_to_decimal(ipv4_addr):
 
 
 def ipv6_to_decimal(ipv6_addr):
-    # print(ipv6_addr)
     if ipv6_addr == -1:
         return ipv6_addr
     else:
@@ -296,9 +301,13 @@ def ipv6_to_decimal(ipv6_addr):
 
 
 def convert_ip_address_to_decimal(ip_addr):
-    if ip_addr.version == 4:
-        return ipv4_to_decimal(ip_addr)
-    elif ip_addr.version == 6:
-        return ipv6_to_decimal(ip_addr)
+    if ip_addr == -1:
+        return -1
     else:
-        log.error('Cannot convert ip address {ip_addr} to decimal'.format(ip_addr=ip_addr))
+        ip_addr = ip_address(ip_addr)
+        if ip_addr.version == 4:
+            return ipv4_to_decimal(ip_addr)
+        elif ip_addr.version == 6:
+            return ipv6_to_decimal(ip_addr)
+        else:
+            log.error('Cannot convert ip address {ip_addr} to decimal'.format(ip_addr=ip_addr))

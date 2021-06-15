@@ -37,37 +37,21 @@ class Kitsune:
             return -1  # Error or no packets left
 
         # process KitNET
-        return self.anomaly_detector.process(x)  # will train during the grace periods, then execute on all the rest.
+        result = self.anomaly_detector.process(x)
+        log.info(result)
+        return result  # will train during the grace periods, then execute on all the rest.
 
     def run(self):
         root_mean_squared_errors = []
         i = 0
-        if self.path:
-            while True:
-                i += 1
-                if i % 1000 == 0:
-                    log.info(i)
-                rmse = self.proc_next_packet()
-                if rmse == -1:
-                    break
-                root_mean_squared_errors.append(rmse)
-        # if self.socket:
-            # TODO read from socket
-            # sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-            # sock.bind('/tmp/{socket_name}'.format(socket_name=self.feature_extractor.SOCKET_NAME))
-            # root_mean_squared_errors = []
-            # i = 0
-            # while True:
-            #     datagram = sock.recv(1024)
-            #     if datagram:
-            #         print(datagram)
-            #         i += 1
-            #         if i % 1000 == 0:
-            #             log.info(i)
-            #         rmse = self.proc_next_packet()
-            #         if rmse == -1:
-            #             break
-            #         root_mean_squared_errors.append(rmse)
+        while True:
+            i += 1
+            if i % 1000 == 0:
+                log.info(i)
+            rmse = self.proc_next_packet()
+            if rmse == -1:
+                break
+            root_mean_squared_errors.append(rmse)
 
         benign_sample = np.log(
             root_mean_squared_errors[self.feature_mapping_training_samples+self.anomaly_detector_training_samples+1:100000])

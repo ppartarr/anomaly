@@ -16,8 +16,7 @@ from anomaly.models.isolation_forest import IForest
 from anomaly.models.gradient_boost import GBoost
 from anomaly.models.gaussian_mixture import GMix
 from anomaly.models.local_outlier_factor import LOF
-from anomaly.models.robust_covariance import RobustCovariance
-
+from anomaly.models.half_space_tree import HSTree
 from anomaly.models.kitsune import Kitsune
 from anomaly.models.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.models.extractors.connections import ConnectionFeatureExtractor
@@ -25,9 +24,8 @@ from anomaly.models.readers.csv import CSVReader
 from anomaly.models.readers.pcap import PCAPReader
 from anomaly.models.readers.tsv import TSVReader, get_tshark_path, pcap2tsv_with_tshark
 from anomaly.models.readers.socket import SocketReader
-
-
 from anomaly.utils import process_csv, process_pcap
+from anomaly.audit_records import audit_records
 import anomaly.config as config
 
 import numpy as np
@@ -192,14 +190,47 @@ def main():
 
             feature_extractor = ConnectionFeatureExtractor
 
-        detector = Kitsune(path=path,
-                           reader=reader,
-                           limit=config.auto_encoder['packet_limit'],
-                           feature_extractor=feature_extractor,
-                           max_autoencoder_size=config.auto_encoder['max_autoencoders'],
-                           feature_mapping_training_samples=config.auto_encoder['feature_mapping_training_samples'],
-                           anomaly_detector_training_samples=config.auto_encoder['anomaly_detector_training_samples'])
-        detector.run()
+        if not args.audit:
+            if args.model == 'Kistune':
+                detector = Kitsune(
+                    path=path,
+                    reader=reader,
+                    limit=config.auto_encoder['packet_limit'],
+                    feature_extractor=feature_extractor,
+                    max_autoencoder_size=config.auto_encoder['max_autoencoders'],
+                    feature_mapping_training_samples=config.auto_encoder['feature_mapping_training_samples'],
+                    anomaly_detector_training_samples=config.auto_encoder['anomaly_detector_training_samples'])
+            elif args.model == 'HSTree':
+                detector = HSTree(
+                    path=path,
+                    reader=reader,
+                    limit=config.hstree['packet_limit'],
+                    feature_extractor=feature_extractor,
+                    anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
+
+            detector.run()
+
+        # running multiple models, one per audit record
+        else:
+            reader = SocketReader
+            for audit_record_type in args.audit:
+                if args.model == 'Kistune':
+                    detector = Kitsune(
+                        path=audit_records[audit_record_type],
+                        reader=reader,
+                        limit=config.auto_encoder['packet_limit'],
+                        feature_extractor=feature_extractor,
+                        max_autoencoder_size=config.auto_encoder['max_autoencoders'],
+                        feature_mapping_training_samples=config.auto_encoder['feature_mapping_training_samples'],
+                        anomaly_detector_training_samples=config.auto_encoder['anomaly_detector_training_samples'])
+                elif args.model == 'HSTree':
+                    detector = HSTree(
+                        path=path,
+                        reader=reader,
+                        limit=config.hstree['packet_limit'],
+                        feature_extractor=feature_extractor,
+                        anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
+                detector.run()
 
     end_time = datetime.now()
     print('Execution time: {time}'.format(time=(end_time - start_time)))

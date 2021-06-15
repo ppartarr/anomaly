@@ -5,12 +5,10 @@ import logging as log
 import os
 import csv
 import socket
-import signal
-import threading
 
 
 class SocketReader:
-    """A class for reading CSVs"""
+    """A class for reading from a Unix socket"""
 
     def __init__(self, path, limit):
         self.path = path

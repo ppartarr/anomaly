@@ -6,8 +6,7 @@ __all__ = [
     'local_outlier_factor',
     'stats',
     'kitnet',
-    'local_outlier_factor',
-    'robust_covariance',
+    'half_space_tree',
     'model_choice',
     'extractors'
 ]
