@@ -2,7 +2,8 @@ __all__ = [
     'models',
     'columns',
     'config',
-    'utils'
+    'utils',
+    'audit_records'
 ]
 
 __version__ = '0.0.0'
