@@ -5,7 +5,6 @@ from anomaly.models.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.models.extractors.connections import ConnectionFeatureExtractor
 from anomaly.models.kitnet.kitnet import KitNET
 import logging as log
-import socket
 import numpy as np
 from scipy.stats import norm
 
@@ -14,10 +13,11 @@ from matplotlib import cm
 
 
 class Kitsune:
+    """Ensemble of auto-encoders"""
+
     def __init__(self, path, reader, limit, feature_extractor, max_autoencoder_size=10, feature_mapping_training_samples=None, anomaly_detector_training_samples=10000, learning_rate=0.1, hidden_ratio=0.75):
 
         self.path = path
-        self.socket = socket
         self.feature_mapping_training_samples = feature_mapping_training_samples
         self.anomaly_detector_training_samples = anomaly_detector_training_samples
 

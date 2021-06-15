@@ -16,14 +16,30 @@ def find_best_features(x, x_train, y_train):
     return col_names_selected
 
 
-def print_stats(y, guesses, y_test):
+def print_stats_labelled(y, guesses, y_test):
+    """Statistics for labelled data"""
     log.info('guess percentage of anomalies: {percentage:.2f}'.format(
         percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
     log.info('actual percentage of anomalies: {percentage:.2f}'.format(
         percentage=(100 - (100 * (y.value_counts()[1])) / len(y))))
 
-    auc = roc_auc_score(y_test, guesses)
-    print('area under the curve: {auc}'.format(auc=auc))
+    # ROC AUC score is not defined if there is only one class in y_true
+    if len(y_test.value_counts()) > 1:
+        auc = roc_auc_score(y_test, guesses)
+        print('area under the curve: {auc}'.format(auc=auc))
+
+    f1 = f1_score(y_test, guesses)
+    print('f1 score: {f1}'.format(f1=f1))
+
+
+def print_stats_unlabelled(guesses, y_test):
+    """Statistics for unlabelled data"""
+    log.info('guess percentage of anomalies: {percentage:.2f}'.format(
+        percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
+
+    if len(y_test.value_counts()) > 1:
+        auc = roc_auc_score(y_test, guesses)
+        print('area under the curve: {auc}'.format(auc=auc))
 
     f1 = f1_score(y_test, guesses)
     print('f1 score: {f1}'.format(f1=f1))

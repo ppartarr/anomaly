@@ -41,31 +41,29 @@ import matplotlib.pyplot as plt
 import logging as log
 
 
-def train(x, y, model):
+def train(x, y, model, tune):
     """Train a model and calculate performance metrics"""
-    # split dataset into train & test
+    # for labelled data
     if not y.empty:
+        # split dataset into train & test
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.2, shuffle=False)
 
         # print(find_best_features(x, x_train, y_train))
-        classifier = model_choice[model](x, y, x_train, x_test, y_train, y_test)
+        log.info(model)
+        classifier = model(x, y, x_train, x_test, y_train, y_test)
+        if tune:
+            classifier.tune()
+
         classifier.train()
 
-        # train_iforest(x, y, x_train, x_test, y_train, y_test)
-        # train_gmm(x, y, x_train, x_test, y_train, y_test)
-        # train_gboost(x, y, x_train, x_test, y_train, y_test)
-        # train_mondrian(x, y, x_train, x_test, y_train, y_test)
-        # train_lof(x, y, x_train, x_test, y_train, y_test)
-        # train_robust_covariance(x, y, x_train, x_test, y_train, y_test)
+    # for unlabelled data
     else:
         x_train, x_test = train_test_split(
             x, test_size=0.2, shuffle=False)
 
         classifier = model_choice[model](x, y, x_train, x_test, y_train, y_test)
         classifier.train()
-
-        # train_iforest_without_labels(x, x_train, x_test)
 
 
 def plot(x, y, guesses, col_name):
@@ -83,18 +81,22 @@ def parse_args():
                         help='Model to train & use', metavar='model', required=True)  # default=model_choice['Kitsune']
     # NOTE: args for offline models
     parser.add_argument('--csv', help='csv file to read network flow data from')
-    parser.add_argument('--dir', help='directory to read csv network flow data from')
+    parser.add_argument('--csv-dir', help='directory to read csv network flow data from')
     parser.add_argument('--pcap', help='pcap file to read data from')
-    parser.add_argument('--tsv', help='tsv file to read data from')
+    parser.add_argument('--pcap-dir', help='directory to read pcaps from')
+    parser.add_argument('--tune', action='store_true', help='tune model before training to find best hyperparameters')
     # NOTE: args for online models
+    parser.add_argument('--tsv', help='tsv file to read data from')
     parser.add_argument('--conn', help='Connection audit record file (netcap)')  # default='/tmp/Connection.sock'
     parser.add_argument('--socket', action='store_true',
                         help='read the data from a unix socket instead of a file')  # default=True
+    parser.add_argument('--audit', help='Read the given audit record types from unix sockets',
+                        choices=audit_records, nargs='*')
     return parser.parse_args()
 
 
 def validate_args(args):
-    if (args.csv and args.dir and args.pcap):
+    if (args.csv and args.csv_dir and args.pcap):
         log.error('Only on of --csv or --dir or --pcap can be specified!')
         raise Exception()
 
@@ -116,21 +118,47 @@ def main():
 
     # if model is offline
     if not is_model_online(args.model):
-        if args.csv:
-            x, y = process_csv(args.csv)
-            train(x, y, args.model)
-        elif args.dir:
-            # concatenate the tuples with map reduce
-            out = map(process_csv, glob.glob(args.dir + os.path.sep + '*.csv'))
-            x, y = reduce(lambda x, y: (
-                pd.concat([x[0], y[0]], ignore_index=True),
-                pd.concat([x[1], y[1]], ignore_index=True)
-            ), out)
-            train(x, y, args.model)
-        elif args.pcap:
-            # NOTE: comment in for pcap offline algs
-            x = process_pcap(args.pcap)
-            train(x, pd.DataFrame(), args.model)
+        # compare all offline models
+        if args.model == 'Offline':
+            if args.csv:
+                x, y = process_csv(args.csv)
+            elif args.csv_dir:
+                # concatenate the tuples with map reduce
+                out = map(process_csv, glob.glob(args.csv_dir + os.path.sep + '*.csv'))
+                x, y = reduce(lambda x, y: (
+                    pd.concat([x[0], y[0]], ignore_index=True),
+                    pd.concat([x[1], y[1]], ignore_index=True)
+                ), out)
+            elif args.pcap:
+                # NOTE: comment in for pcap offline algs
+                x = process_pcap(args.pcap)
+                y = pd.DataFrame()
+            for model in model_choice[args.model]:
+                train(x, y, model, args.tune)
+
+        # run a single offline model
+        else:
+            if args.csv:
+                x, y = process_csv(args.csv)
+                train(x, y, model_choice[args.model], args.tune)
+            elif args.csv_dir:
+                # concatenate the tuples with map reduce
+                out = map(process_csv, glob.glob(args.csv_dir + os.path.sep + '*.csv'))
+                x, y = reduce(lambda x, y: (
+                    pd.concat([x[0], y[0]], ignore_index=True),
+                    pd.concat([x[1], y[1]], ignore_index=True)
+                ), out)
+                train(x, y, model_choice[args.model], args.tune)
+            elif args.pcap:
+                # NOTE: comment in for pcap offline algs
+                x = process_pcap(args.pcap)
+                train(x, pd.DataFrame(), model_choice[args.model], args.tune)
+            elif args.pcap_dir:
+                # concatenate the tuples with map reduce
+                out = map(process_pcap, glob.glob(args.csv_dir + os.path.sep + '*.pcap'))
+                x = reduce(lambda x, y: (pd.concat([x[0], y[0]], ignore_index=True)), out)
+                train(x, pd.DataFrame(), model_choice[args.model], args.tune)
+
     # online training methods
     else:
         if args.pcap:

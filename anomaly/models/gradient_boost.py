@@ -3,9 +3,10 @@
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import roc_auc_score
 import logging as log
 
-from anomaly.models.stats import print_stats
+from anomaly.models.stats import print_stats_labelled
 
 
 class GBoost:
@@ -19,19 +20,22 @@ class GBoost:
         self.y_train = y_train
         self.y_test = y_test
 
-        self.gboost
+        self.gboost = None
+        self.params = None
 
-    def train(self, x, y, x_train, x_test, y_train, y_test):
+    def train(self):
         """Train & test the Gradient Boosting Model"""
         log.info('Training the Gradient Boosting Model')
-        self.gboost = GradientBoostingClassifier(
-            n_estimators=80,
-            verbose=1)
 
-        classifier = self.gboost.fit(x_train, y_train)
-        guesses = classifier.predict(x_test)
+        if not self.params:
+            self.params = {'n_estimators': 80,
+                           'verbose': 1}
+        self.gboost = GradientBoostingClassifier(**self.params)
 
-        print_stats(y, guesses, y_test)
+        classifier = self.gboost.fit(self.x_train, self.y_train)
+        guesses = classifier.predict(self.x_test)
+
+        print_stats_labelled(self.y, guesses, self.y_test)
 
     def predict(self, x):
         return self.gboost.predict(x)
@@ -39,24 +43,30 @@ class GBoost:
     def tune(self):
         """ Tune the model by testing various hyperparameters using the GridSearchCV"""
 
-        iforest = GradientBoostingClassifier(verbose=1)
+        gboost = GradientBoostingClassifier(verbose=1)
 
-        param_grid = {
+        param_grid = [{
             'n_estimators': [80, 100, 120],
-            'loss': ['deviance', 'exponential'],
+            'loss': ['deviance'],
             'learning_rate': [0.15, 0.1, 0.05],
-            'subsample': [1.0, ],
-            'criterion': ['friedman_mse', 'mse', 'mae'],
-            'bootstrap': [False],
-            'n_jobs': [-1]}
+            'subsample': [0.8, 1.0, 1.2]
+        },
+            {
+            'n_estimators': [80, 100, 120],
+            'loss': ['exponential'],
+            'learning_rate': [0.15, 0.1, 0.05],
+            'subsample': [0.8, 1.0, 1.2]
+        }]
 
-        grid_search = GridSearchCV(iforest,
+        grid_search = GridSearchCV(gboost,
                                    param_grid,
-                                   scoring="roc_auc_score",
+                                   scoring=roc_auc_score,
                                    refit=True,
                                    return_train_score=True,
                                    verbose=1)
 
         best_model = grid_search.fit(self.x_train, self.y_train)
+
+        self.params = best_model.best_params_
 
         print('Best parameters', best_model.best_params_)

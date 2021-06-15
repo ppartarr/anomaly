@@ -9,7 +9,7 @@ from sklearn.mixture import GaussianMixture
 import numpy as np
 import logging as log
 
-from anomaly.models.stats import print_stats
+from anomaly.models.stats import print_stats_labelled
 from anomaly.config import n_jobs
 
 log = log.getLogger(__name__)
@@ -26,25 +26,33 @@ class IForest:
         self.y_train = y_train
         self.y_test = y_test
 
-        self.iforest
+        self.iforest = None
+        self.params = None
 
     def train(self):
         """Train & test the Isolation Forest model with or without labels"""
         log.info('Training the Isolation Forest')
+
         # train with labels
         if not self.y.empty:
+
             contamination = 1 - ((self.y.value_counts()[1]) / len(self.y))
             log.info('contamination rate: {contam:0.2f}%'.format(contam=100*contamination))
-            self.iforest = IsolationForest(n_estimators=80,
-                                           max_features=30,
-                                           contamination=contamination,
-                                           n_jobs=n_jobs,
-                                           verbose=1)
+
+            # set params manually if model has not been tuned yet
+            if not self.params:
+                self.params = {'n_estimators': 80,
+                               'max_features': 30,
+                               'contamination': contamination,
+                               'n_jobs': n_jobs,
+                               'verbose': 1}
+
+            self.iforest = IsolationForest(**self.params,)
 
             classifier = self.iforest.fit(self.x_train)
             guesses = classifier.predict(self.x_test)
 
-            print_stats(self.y, guesses, self.y_test)
+            print_stats_labelled(self.y, guesses, self.y_test)
             # train without labels
         else:
             self.iforest = IsolationForest(n_estimators=80,
@@ -63,22 +71,21 @@ class IForest:
     def tune(self):
         """ Tune the model by testing various hyperparameters using the GridSearchCV"""
 
-        iforest = IsolationForest(verbose=1)
+        iforest = IsolationForest(verbose=1, n_jobs=n_jobs)
 
         param_grid = {'n_estimators': [40, 60, 80],
-                      'max_samples': ['auto'],
-                      'contamination': ['auto'],
-                      'max_features': [20, 30],
-                      'bootstrap': [False],
-                      'n_jobs': [-1]}
+                      'max_features': [20, 30]
+                      }
 
         grid_search = GridSearchCV(iforest,
                                    param_grid,
-                                   scoring="roc_auc_score",
+                                   scoring=roc_auc_score,
                                    refit=True,
                                    return_train_score=True,
                                    verbose=1)
 
         best_model = grid_search.fit(self.x_train, self.y_train)
+        self.params = best_model.best_params_
+        log.info(best_model.best_params_)
 
         print('Best parameters', best_model.best_params_)
