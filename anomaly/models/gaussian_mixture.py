@@ -55,32 +55,28 @@ class GMix:
                        'tol': [1**-3.5, 1**-3, 1**-2.5, ],
                        'max_iter': [80, 100, 120],
                        'n_init': [1, 3, 5],
-                       'reg_covar': [1e-5, 1e-6, 1e-7],
-                       'init_params': ['kmeans'],
+                       'reg_covar': [1e-5, 1e-6, 1e-7]
                        },
                       {'n_components': [1, 5, 10],
                       'covariance_type': ['tied'],
                        'tol': [1**-3.5, 1**-3, 1**-2.5, ],
                        'max_iter': [80, 100, 120],
                        'n_init': [1, 3, 5],
-                       'reg_covar': [1e-5, 1e-6, 1e-7],
-                       'init_params': ['kmeans'],
+                       'reg_covar': [1e-5, 1e-6, 1e-7]
                        },
                       {'n_components': [1, 5, 10],
                       'covariance_type': ['diag'],
                        'tol': [1**-3.5, 1**-3, 1**-2.5, ],
                        'max_iter': [80, 100, 120],
                        'n_init': [1, 3, 5],
-                       'reg_covar': [1e-5, 1e-6, 1e-7],
-                       'init_params': ['kmeans'],
+                       'reg_covar': [1e-5, 1e-6, 1e-7]
                        },
                       {'n_components': [1, 5, 10],
                       'covariance_type': ['spherical'],
                        'tol': [1**-3.5, 1**-3, 1**-2.5, ],
                        'max_iter': [80, 100, 120],
                        'n_init': [1, 3, 5],
-                       'reg_covar': [1e-5, 1e-6, 1e-7],
-                       'init_params': ['kmeans'],
+                       'reg_covar': [1e-5, 1e-6, 1e-7]
                        }
                       ]
 

@@ -79,9 +79,7 @@ class LOF:
         lof = LocalOutlierFactor()
 
         param_grid = {'n_neighbors': [10, 20, 30],
-                      'leaf_size': [20, 30, 40],
-                      'contamination': ['auto'],
-                      'max_features': [20, 30]
+                      'leaf_size': [20, 30, 40]
                       }
 
         grid_search = GridSearchCV(lof,

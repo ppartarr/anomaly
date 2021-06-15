@@ -167,7 +167,9 @@ def process_pcap(filepath):
         log.error('File {filepath} is not a tsv or pcap file'.format(filepath=filepath))
         raise Exception()
 
-    chunks = pd.read_table(tshark_filepath, dtype=pcap_dtypes, chunksize=config.chunksize)
+    # NOTE don't use dtypes for pcaps
+    chunks = pd.read_table(tshark_filepath, chunksize=config.chunksize,
+                           na_values=['	', '\r\t', '\t', '', 'nan'])
 
     x_list = []
 
@@ -176,6 +178,8 @@ def process_pcap(filepath):
         # x = process_infinity(x)
         x = process_nan(x)
         x = process_addresses(x)
+
+        x = x.astype(dtype=pcap_dtypes)
 
         # NOTE: comment out to disable additional statistical features from Kitsune
         x = feature_engineering(x)
@@ -198,7 +202,6 @@ def feature_engineering(x):
 
 
 def feature_stats(row, netStats):
-    # print(row)
     IPtype = np.nan
     timestamp = row[0]
     framelen = row[1]
@@ -296,6 +299,8 @@ def ipv4_to_decimal(ipv4_addr):
 def ipv6_to_decimal(ipv6_addr):
     if ipv6_addr == -1:
         return ipv6_addr
+    elif type(ipv6_addr) == float and np.isnan(ipv6_addr):
+        return -1
     else:
         return int(IPv6Address(ipv6_addr))
 

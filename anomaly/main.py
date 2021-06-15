@@ -60,7 +60,7 @@ def train(x, y, model, tune):
         x_train, x_test = train_test_split(
             x, test_size=0.2, shuffle=False)
 
-        classifier = model_choice[model](x, y, x_train, x_test, y_train, y_test)
+        classifier = model(x, y, x_train, x_test, pd.DataFrame(), pd.DataFrame())
         classifier.train()
 
 
@@ -153,8 +153,8 @@ def main():
                 train(x, pd.DataFrame(), model_choice[args.model], args.tune)
             elif args.pcap_dir:
                 # concatenate the tuples with map reduce
-                out = map(process_pcap, glob.glob(args.csv_dir + os.path.sep + '*.pcap'))
-                x = reduce(lambda x, y: (pd.concat([x[0], y[0]], ignore_index=True)), out)
+                out = map(process_pcap, glob.glob(args.pcap_dir + os.path.sep + '*.pcap'))
+                x = reduce(lambda x, y: pd.concat([x, y]), out)
                 train(x, pd.DataFrame(), model_choice[args.model], args.tune)
 
     # online training methods

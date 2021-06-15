@@ -32,14 +32,7 @@ def print_stats_labelled(y, guesses, y_test):
     print('f1 score: {f1}'.format(f1=f1))
 
 
-def print_stats_unlabelled(guesses, y_test):
+def print_stats_unlabelled(y, guesses):
     """Statistics for unlabelled data"""
     log.info('guess percentage of anomalies: {percentage:.2f}'.format(
         percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
-
-    if len(y_test.value_counts()) > 1:
-        auc = roc_auc_score(y_test, guesses)
-        print('area under the curve: {auc}'.format(auc=auc))
-
-    f1 = f1_score(y_test, guesses)
-    print('f1 score: {f1}'.format(f1=f1))

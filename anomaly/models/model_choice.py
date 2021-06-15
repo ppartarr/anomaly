@@ -11,15 +11,15 @@ from anomaly.models.half_space_tree import HSTree
 
 model_choice = {
     # offline
-    'IForest': IForest,
-    'GBoost': GBoost,
-    'LOF': LOF,
-    'GMix': GMix,
-    'SVM': SVM,
-    'Offline': [IForest, GBoost, LOF, GMix, SVM],
+    'iforest': IForest,
+    'gboost': GBoost,
+    'lof': LOF,
+    'gmix': GMix,
+    'svm': SVM,
+    'offline': [IForest, GBoost, LOF, GMix, SVM],
     # online
-    'Kitsune': Kitsune,
-    'HSTree': HSTree
+    'kistune': Kitsune,
+    'hstree': HSTree
 }
 
 
