@@ -191,7 +191,7 @@ def main():
             feature_extractor = ConnectionFeatureExtractor
 
         if not args.audit:
-            if args.model == 'Kistune':
+            if args.model == 'kitsune':
                 detector = Kitsune(
                     path=path,
                     reader=reader,
@@ -200,7 +200,7 @@ def main():
                     max_autoencoder_size=config.auto_encoder['max_autoencoders'],
                     feature_mapping_training_samples=config.auto_encoder['feature_mapping_training_samples'],
                     anomaly_detector_training_samples=config.auto_encoder['anomaly_detector_training_samples'])
-            elif args.model == 'HSTree':
+            elif args.model == 'hstree':
                 detector = HSTree(
                     path=path,
                     reader=reader,
@@ -214,7 +214,7 @@ def main():
         else:
             reader = SocketReader
             for audit_record_type in args.audit:
-                if args.model == 'Kistune':
+                if args.model == 'kitsune':
                     detector = Kitsune(
                         path=audit_records[audit_record_type],
                         reader=reader,
@@ -223,7 +223,7 @@ def main():
                         max_autoencoder_size=config.auto_encoder['max_autoencoders'],
                         feature_mapping_training_samples=config.auto_encoder['feature_mapping_training_samples'],
                         anomaly_detector_training_samples=config.auto_encoder['anomaly_detector_training_samples'])
-                elif args.model == 'HSTree':
+                elif args.model == 'hstree':
                     detector = HSTree(
                         path=path,
                         reader=reader,

@@ -24,4 +24,4 @@ model_choice = {
 
 
 def is_model_online(model):
-    return model == 'Kitsune' or model == 'HSTree'
+    return model == 'kitsune' or model == 'hstree'

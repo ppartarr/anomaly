@@ -28,7 +28,8 @@ class GBoost:
         log.info('Training the Gradient Boosting Model')
 
         if not self.params:
-            self.params = {'n_estimators': 80,
+            self.params = {'learning_rate': 0.15,
+                           'n_estimators': 80,
                            'verbose': 1}
         self.gboost = GradientBoostingClassifier(**self.params)
 
@@ -45,6 +46,7 @@ class GBoost:
 
         gboost = GradientBoostingClassifier(verbose=1)
 
+        # Best parameters {'learning_rate': 0.15, 'loss': 'deviance', 'n_estimators': 80, 'subsample': 0.8}
         param_grid = [{
             'n_estimators': [80, 100, 120],
             'loss': ['deviance'],

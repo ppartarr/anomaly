@@ -41,10 +41,13 @@ class LOF:
             log.info('contamination rate: {contam:0.2f}%'.format(contam=100*contamination))
 
             if not self.params:
+                # Best parameters {'leaf_size': 20, 'n_neighbors': 10}
                 self.params = {'contamination': contamination,
+                               'leaf_size': 20,
+                               'n_neighbors': 10,
                                'n_jobs': n_jobs}
 
-            self.lof = LocalOutlierFactor(self.params)
+            self.lof = LocalOutlierFactor(**self.params)
 
             guesses = self.lof.fit_predict(self.x)
             # n_errors = (guesses != self.y_train).sum()
