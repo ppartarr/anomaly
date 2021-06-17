@@ -1,13 +1,15 @@
 #!/home/philippe/src/anomaly/venv/bin/python3
 # coding: utf-8
 
-from anomaly.models.isolation_forest import IForest
-from anomaly.models.gradient_boost import GBoost
-from anomaly.models.gaussian_mixture import GMix
-from anomaly.models.local_outlier_factor import LOF
-from anomaly.models.svm import SVM
-from anomaly.models.kitsune import Kitsune
-from anomaly.models.half_space_tree import HSTree
+from anomaly.models.offline.gradient_boost import GBoost
+from anomaly.models.offline.isolation_forest import IForest
+from anomaly.models.offline.gaussian_mixture import GMix
+from anomaly.models.offline.local_outlier_factor import LOF
+from anomaly.models.offline.svm import SVM
+
+from anomaly.models.online.kitsune import Kitsune
+from anomaly.models.online.half_space_tree import HSTree
+from anomaly.models.online.igradient_boost import IGBoost
 
 model_choice = {
     # offline
@@ -18,10 +20,12 @@ model_choice = {
     'svm': SVM,
     'offline': [IForest, GBoost, LOF, GMix, SVM],
     # online
-    'kistune': Kitsune,
-    'hstree': HSTree
+    'kitsune': Kitsune,
+    'hstree': HSTree,  # incremental iforest
+    'igboost': IGBoost,
+    'online': [Kitsune, HSTree, IGBoost]
 }
 
 
 def is_model_online(model):
-    return model == 'kitsune' or model == 'hstree'
+    return model_choice[model] in model_choice['online']

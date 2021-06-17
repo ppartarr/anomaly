@@ -4,18 +4,18 @@
 import logging as log
 import numpy as np
 
-from anomaly.models.extractors.raw_packets import RawPacketFeatureExtractor
-from anomaly.models.extractors.connections import ConnectionFeatureExtractor
+from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
+from anomaly.extractors.connections import ConnectionFeatureExtractor
 from scipy.stats import norm
 from matplotlib import pyplot as plt
 from matplotlib import cm
 
-from river.anomaly import HalfSpaceTrees
+from xgboost import XGBClassifier
 
 
-class HSTree:
-    """Half Space Tree (online Isolation Forest variant)
-    https://riverml.xyz/latest/api/anomaly/HalfSpaceTrees/"""
+class IGBoost:
+    """ AdaBoost classifier using Hoeffding trees
+    https://riverml.xyz/latest/api/ensemble/AdaBoostClassifier/"""
 
     def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000):
         self.path = path
@@ -24,23 +24,29 @@ class HSTree:
 
         self.feature_extractor = feature_extractor(path, reader, limit)
 
-        self.hstree = HalfSpaceTrees(
-            n_trees=30,
-            height=16,
-            window_size=255)
+        self.ixgboost = XGBClassifier(
+            n_estimators=80,
+            max_depth=15,
+            learning_rate=0.15,
+            verbosity=3,
+            n_jobs=-1
+
+        )
 
     def proc_next_packet(self):
         x = self.feature_extractor.get_next_vector()
         if len(x) == 0:
             return -1  # Error or no packets left
 
-        log.info(x)
+        # log.info(x)
+        # log.info(type)
 
         if self.current_packet_index < self.anomaly_detector_training_samples:
-            result = self.hstree.learn_one(x)
-        else:
-            result = self.hstree.score_one(x)
-            # TODO write result to socket?
+            # TODO: add labels as y
+            self.ixgboost = self.ixgboost.fit(x, verbose=True, xgb_model=self.ixgboost)
+
+        result = self.ixgboost.predict(x)
+        # TODO write result to socket?
 
         return result
 

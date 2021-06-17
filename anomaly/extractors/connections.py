@@ -4,8 +4,8 @@
 import logging as log
 import numpy as np
 
-from anomaly.models.extractors.protocols import convert_protocol_name_to_number
-from anomaly.models.kitnet.stats.connection import ConnectionStatistics
+from anomaly.extractors.protocols import convert_protocol_name_to_number
+from anomaly.models.online.kitnet.stats.connection import ConnectionStatistics
 from anomaly.utils import mac_to_decimal, ipv4_to_decimal, ipv6_to_decimal, convert_ip_address_to_decimal
 
 

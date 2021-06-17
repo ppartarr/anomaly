@@ -12,18 +12,23 @@ from functools import reduce
 
 # from anomaly.models.mondrian_forest import train_mondrian, train_mondrian_without_labels
 from anomaly.models.model_choice import model_choice, is_model_online
-from anomaly.models.isolation_forest import IForest
-from anomaly.models.gradient_boost import GBoost
-from anomaly.models.gaussian_mixture import GMix
-from anomaly.models.local_outlier_factor import LOF
-from anomaly.models.half_space_tree import HSTree
-from anomaly.models.kitsune import Kitsune
-from anomaly.models.extractors.raw_packets import RawPacketFeatureExtractor
-from anomaly.models.extractors.connections import ConnectionFeatureExtractor
-from anomaly.models.readers.csv import CSVReader
-from anomaly.models.readers.pcap import PCAPReader
-from anomaly.models.readers.tsv import TSVReader, get_tshark_path, pcap2tsv_with_tshark
-from anomaly.models.readers.socket import SocketReader
+from anomaly.models.offline.isolation_forest import IForest
+from anomaly.models.offline.gradient_boost import GBoost
+from anomaly.models.offline.gaussian_mixture import GMix
+from anomaly.models.offline.local_outlier_factor import LOF
+from anomaly.models.offline.svm import SVM
+
+from anomaly.models.online.half_space_tree import HSTree
+from anomaly.models.online.kitsune import Kitsune
+from anomaly.models.online.igradient_boost import IGBoost
+
+
+from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
+from anomaly.extractors.connections import ConnectionFeatureExtractor
+from anomaly.readers.csv import CSVReader
+from anomaly.readers.pcap import PCAPReader
+from anomaly.readers.tsv import TSVReader, get_tshark_path, pcap2tsv_with_tshark
+from anomaly.readers.socket import SocketReader
 from anomaly.utils import process_csv, process_pcap
 from anomaly.audit_records import audit_records
 import anomaly.config as config
@@ -48,12 +53,16 @@ def train(x, y, model, tune):
             x, y, test_size=0.2, shuffle=False)
 
         # print(find_best_features(x, x_train, y_train))
-        log.info(model)
+
         classifier = model(x, y, x_train, x_test, y_train, y_test)
         if tune:
             classifier.tune()
 
-        classifier.train()
+        # handle exceptions so that one failing model doesn't cause failure (when using --offline)
+        try:
+            classifier.train()
+        except Exception as e:
+            log.error(e)
 
     # for unlabelled data
     else:
@@ -117,7 +126,7 @@ def main():
     # if model is offline
     if not is_model_online(args.model):
         # compare all offline models
-        if args.model == 'Offline':
+        if args.model == 'offline':
             if args.csv:
                 x, y = process_csv(args.csv)
             elif args.csv_dir:
@@ -131,6 +140,7 @@ def main():
                 # NOTE: comment in for pcap offline algs
                 x = process_pcap(args.pcap)
                 y = pd.DataFrame()
+
             for model in model_choice[args.model]:
                 train(x, y, model, args.tune)
 
@@ -207,6 +217,13 @@ def main():
                     limit=config.hstree['packet_limit'],
                     feature_extractor=feature_extractor,
                     anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
+            elif args.model == 'igboost':
+                detector = IGBoost(
+                    path=path,
+                    reader=reader,
+                    limit=config.hstree['packet_limit'],
+                    feature_extractor=feature_extractor,
+                    anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
 
             detector.run()
 
@@ -230,6 +247,15 @@ def main():
                         limit=config.hstree['packet_limit'],
                         feature_extractor=feature_extractor,
                         anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
+                elif args.model == 'igboost':
+                    detector = IGBoost(
+                        path=path,
+                        reader=reader,
+                        limit=config.hstree['packet_limit'],
+                        feature_extractor=feature_extractor,
+                        anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
+
+                log.info(detector)
                 detector.run()
 
     end_time = datetime.now()

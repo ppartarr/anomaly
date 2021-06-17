@@ -30,11 +30,12 @@ class GMix:
         log.info('Training the Gaussian Mixture Model')
 
         if not self.params:
-            self.params = {"n_components": 1,
-                           "covariance_type": 'tied',
-                           "verbose": 1,
-                           "n_init": 3,
-                           "reg_covar": 1e-3}
+            self.params = {'n_components': 1,
+                           'covariance_type': 'full',
+                           'verbose': 1,
+                           'n_init': 1,
+                           'reg_covar': 1e-5,
+                           'tol': 1.0}
 
         self.gmm = GaussianMixture(**self.params)
 
@@ -53,28 +54,7 @@ class GMix:
 
         param_grid = [{'n_components': [1, 5, 10],
                       'covariance_type': ['full'],
-                       'tol': [1**-3.5, 1**-3, 1**-2.5, ],
-                       'max_iter': [80, 100, 120],
-                       'n_init': [1, 3, 5],
-                       'reg_covar': [1e-5, 1e-6, 1e-7]
-                       },
-                      {'n_components': [1, 5, 10],
-                      'covariance_type': ['tied'],
-                       'tol': [1**-3.5, 1**-3, 1**-2.5, ],
-                       'max_iter': [80, 100, 120],
-                       'n_init': [1, 3, 5],
-                       'reg_covar': [1e-5, 1e-6, 1e-7]
-                       },
-                      {'n_components': [1, 5, 10],
-                      'covariance_type': ['diag'],
-                       'tol': [1**-3.5, 1**-3, 1**-2.5, ],
-                       'max_iter': [80, 100, 120],
-                       'n_init': [1, 3, 5],
-                       'reg_covar': [1e-5, 1e-6, 1e-7]
-                       },
-                      {'n_components': [1, 5, 10],
-                      'covariance_type': ['spherical'],
-                       'tol': [1**-3.5, 1**-3, 1**-2.5, ],
+                       'tol': [1**-3.5, 1**-3, 1**-2.5],
                        'max_iter': [80, 100, 120],
                        'n_init': [1, 3, 5],
                        'reg_covar': [1e-5, 1e-6, 1e-7]

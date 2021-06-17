@@ -13,9 +13,9 @@ import csv
 import os
 import subprocess
 
-from anomaly.models.kitnet.stats.network import NetworkStatistics
-from anomaly.models.readers.pcap import PCAPReader
-from anomaly.models.readers.tsv import TSVReader
+from anomaly.models.online.kitnet.stats.network import NetworkStatistics
+from anomaly.readers.pcap import PCAPReader
+from anomaly.readers.tsv import TSVReader
 import logging as log
 
 log = log.getLogger(__name__)

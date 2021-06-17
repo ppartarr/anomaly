@@ -1,9 +1,9 @@
 #!/home/philippe/src/anomaly/venv/bin/python3
 # coding: utf-8
 
-from anomaly.models.extractors.raw_packets import RawPacketFeatureExtractor
-from anomaly.models.extractors.connections import ConnectionFeatureExtractor
-from anomaly.models.kitnet.kitnet import KitNET
+from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
+from anomaly.extractors.connections import ConnectionFeatureExtractor
+from anomaly.models.online.kitnet.kitnet import KitNET
 import logging as log
 import numpy as np
 from scipy.stats import norm
@@ -38,7 +38,6 @@ class Kitsune:
 
         # process KitNET
         result = self.anomaly_detector.process(x)
-        log.info(result)
         return result  # will train during the grace periods, then execute on all the rest.
 
     def run(self):
@@ -54,7 +53,7 @@ class Kitsune:
             root_mean_squared_errors.append(rmse)
 
         benign_sample = np.log(
-            root_mean_squared_errors[self.feature_mapping_training_samples+self.anomaly_detector_training_samples+1:100000])
+            root_mean_squared_errors[self.feature_mapping_training_samples+self.anomaly_detector_training_samples+1:10000])
         log_probs = norm.logsf(np.log(root_mean_squared_errors), np.mean(benign_sample), np.std(benign_sample))
 
         # plot the RMSE anomaly scores

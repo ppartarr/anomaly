@@ -9,7 +9,7 @@ from sklearn.mixture import GaussianMixture
 import numpy as np
 import logging as log
 
-from anomaly.models.stats import print_stats_labelled
+from anomaly.models.stats import print_stats_labelled, print_stats_unlabelled
 from anomaly.config import n_jobs
 
 log = log.getLogger(__name__)
@@ -64,6 +64,7 @@ class IForest:
             guesses = classifier.predict(self.x_test)
 
             log.info(np.unique(guesses, return_counts=True))
+            print_stats_unlabelled(self.y, guesses)
 
     def predict(self, x):
         return self.iforest.predict(x)

@@ -8,7 +8,7 @@ from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 
 from anomaly.columns import csv_dtypes, pcap_dtypes
-from anomaly.models.kitnet.stats.network import NetworkStatistics
+from anomaly.models.online.kitnet.stats.network import NetworkStatistics
 import anomaly.config as config
 
 from ipaddress import IPv4Address, IPv6Address, ip_address
@@ -108,7 +108,8 @@ def process_csv(filepath):
     log.info('Opening {}...'.format(filepath))
 
     # NOTE: we cannot use dtype & converters so we convert the columns manually later
-    chunks = pd.read_csv(filepath, dtype=csv_dtypes, chunksize=config.chunksize)
+    chunks = pd.read_csv(filepath, chunksize=config.chunksize,
+                         na_values=['	', '\r\t', '\t', '', 'nan'])
 
     x_list = []
     y_list = []
@@ -132,6 +133,7 @@ def process_csv(filepath):
         x = chunk
         x = process_infinity(x)
         x = process_nan(x)
+        # x = x.astype(dtype=csv_dtypes)
 
         # NOTE: don't drop columns when reading from multiple files since value might vary across files
         # x = drop_constant_columns(x)
