@@ -15,13 +15,13 @@ model_choice = {
     # offline
     'iforest': IForest,
     'gboost': GBoost,
-    'lof': LOF,
+    # 'lof': LOF,
     'gmix': GMix,
     'svm': SVM,
-    'offline': [IForest, GBoost, LOF, GMix, SVM],
+    'offline': [IForest, GBoost, GMix, SVM],
     # online
     'kitsune': Kitsune,
-    'hstree': HSTree,   # incremental iforest
+    'hstree': HSTree,    # incremental iforest
     'igboost': IGBoost,  # incremental gradient boost
     'online': [Kitsune, HSTree, IGBoost]
 }
