@@ -123,7 +123,7 @@ def main():
     log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     handlers=[
-                        log.FileHandler("../anomaly.log"),
+                        log.FileHandler("anomaly.log"),
                         log.StreamHandler()
                     ],
                     level=log.INFO)
