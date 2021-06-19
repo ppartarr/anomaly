@@ -17,27 +17,31 @@ def stats(data_dir_path):
     for file in files:
         benign = 0
         anom = 0
+        rows = 0
         unique_labels = set()
 
         chunks = pd.read_csv(file, chunksize=500000)
         for chunk in chunks:
 
             benign += chunk['Label'].value_counts()['Benign']
-            anom += len(chunk) - benign
+            anom += len(chunk) - chunk['Label'].value_counts()['Benign']
+            rows += len(chunk)
 
-            total_rows += len(chunk)
+            total_rows += rows
             total_benign += benign
             total_anom += anom
 
             unique_labels = unique_labels.union(set(chunk['Label'].unique()))
 
+        # print('benign: {b}'.format(b=benign))
+        # print('anom: {a}'.format(a=anom))
+        # print('rows: {r}'.format(r=rows))
         print('{file} percentage of malicious flows: {percentage}'.format(
             file=file, percentage=100*(anom/(benign + anom))))
         print('unique labels: {unique_labels}'.format(unique_labels=unique_labels))
 
     print('total percentage of malicious flows: {percentage}'.format(
         percentage=100*(total_anom/(total_benign + total_benign))))
-    print('unique labels: {unique}'.format(unique=unique_labels))
 
 
 def parse_args():
