@@ -33,7 +33,7 @@ class GMix:
             self.params = {'n_components': 2,
                            'covariance_type': 'full',
                            'verbose': 1,
-                           'n_init': 1,
+                           'n_init': 10,
                            'reg_covar': 1e-5,
                            'tol': 1.0}
 
