@@ -31,7 +31,12 @@ from anomaly.readers.tsv import TSVReader, get_tshark_path, pcap2tsv_with_tshark
 from anomaly.readers.socket import SocketReader
 from anomaly.utils import process_csv, process_pcap
 from anomaly.audit_records import audit_records
+from anomaly.models.stats import find_best_features
+
 import anomaly.config as config
+
+import dask.dataframe as dd
+from dask.distributed import Client
 
 import numpy as np
 import pandas as pd
@@ -46,6 +51,11 @@ import logging as log
 
 def train(x, y, model, tune):
     """Train a model and calculate performance metrics"""
+
+    # convert from dask to pandas if necessary
+    x = x.compute() if isinstance(x, dd.DataFrame) else x
+    y = y.compute() if isinstance(y, dd.Series) else y
+
     # for labelled data
     if not y.empty:
         # split dataset into train & test
@@ -125,20 +135,24 @@ def main():
 
     # if model is offline
     if not is_model_online(args.model):
+
+        # start dask dashboard
+        client = Client(n_workers=2, threads_per_worker=4, processes=True, memory_limit='4GB')
+        log.info('connect to the dask dashboard at {url}'.format(url='http://localhost:8787/status'))
+
         # compare all offline models
         if args.model == 'offline':
             if args.csv:
                 x, y = process_csv(args.csv)
             elif args.csv_dir:
-                # concatenate the tuples with map reduce
-                out = map(process_csv, glob.glob(args.csv_dir + os.path.sep + '*.csv'))
-                x, y = reduce(lambda x, y: (
-                    pd.concat([x[0], y[0]], ignore_index=True),
-                    pd.concat([x[1], y[1]], ignore_index=True)
-                ), out)
-            elif args.pcap:
+                x, y = process_csv(args.csv_dir + os.path.sep + '*.csv')
+            elif args.pcap or args.tsv:
                 # NOTE: comment in for pcap offline algs
                 x = process_pcap(args.pcap)
+                y = pd.DataFrame()
+            elif args.pcap_dir:
+                # concatenate the tuples with map reduce
+                x = process_pcap(args.pcap_dir + os.path.sep + '*.pcap')
                 y = pd.DataFrame()
 
             for model in model_choice[args.model]:
@@ -148,24 +162,17 @@ def main():
         else:
             if args.csv:
                 x, y = process_csv(args.csv)
-                train(x, y, model_choice[args.model], args.tune)
             elif args.csv_dir:
-                # concatenate the tuples with map reduce
-                out = map(process_csv, glob.glob(args.csv_dir + os.path.sep + '*.csv'))
-                x, y = reduce(lambda x, y: (
-                    pd.concat([x[0], y[0]], ignore_index=True),
-                    pd.concat([x[1], y[1]], ignore_index=True)
-                ), out)
-                train(x, y, model_choice[args.model], args.tune)
-            elif args.pcap:
+                x, y = process_csv(args.csv_dir + os.path.sep + '*.csv')
+            elif args.pcap or args.tsv:
                 # NOTE: comment in for pcap offline algs
                 x = process_pcap(args.pcap)
-                train(x, pd.DataFrame(), model_choice[args.model], args.tune)
+                y = pd.DataFrame()
             elif args.pcap_dir:
-                # concatenate the tuples with map reduce
-                out = map(process_pcap, glob.glob(args.pcap_dir + os.path.sep + '*.pcap'))
-                x = reduce(lambda x, y: pd.concat([x, y]), out)
-                train(x, pd.DataFrame(), model_choice[args.model], args.tune)
+                x = process_pcap(args.pcap_dir + os.path.sep + '*.pcap')
+                y = pd.DataFrame()
+
+            train(x, y, model_choice[args.model], args.tune)
 
     # online training methods
     else:

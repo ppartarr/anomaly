@@ -20,3 +20,4 @@ n_jobs = -1
 
 # reading from csv & pcaps
 chunksize = 500000
+blocksize = '16MB'

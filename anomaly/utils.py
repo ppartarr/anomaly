@@ -7,7 +7,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 
-from anomaly.columns import csv_dtypes, pcap_dtypes
+from anomaly.columns import csv_dtypes, pcap_dtypes, best_30
 from anomaly.models.online.kitnet.stats.network import NetworkStatistics
 import anomaly.config as config
 
@@ -15,6 +15,7 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 import argparse
 import matplotlib.pyplot as plt
 import os
@@ -33,31 +34,35 @@ def process_labels(y):
 
     # set all malicious labels to -1
     # label names obtained from stats.py
-    anomaly_labels = [
-        'DoS attacks-SlowHTTPTest',
-        'DoS attacks-GoldenEye',
-        'DoS attacks-Hulk',
-        'DoS attacks-Slowloris',
-        'DDOS attack-LOIC-UDP',
-        'DDoS attacks-LOIC-HTTP',
-        'DDOS attack-HOIC',
-        'SSH-Bruteforce',
-        'Brute Force -Web',
-        'Brute Force -XSS',
-        'FTP-BruteForce',
-        'SQL Injection',
-        'Bot',
-        'Infilteration'
-    ]
-    y.replace(anomaly_labels, -1, inplace=True)
+    labels = {
+        'DoS attacks-SlowHTTPTest': -1,
+        'DoS attacks-GoldenEye': -1,
+        'DoS attacks-Hulk': -1,
+        'DoS attacks-Slowloris': -1,
+        'DDOS attack-LOIC-UDP': -1,
+        'DDoS attacks-LOIC-HTTP': -1,
+        'DDOS attack-HOIC': -1,
+        'SSH-Bruteforce': -1,
+        'Brute Force -Web': -1,
+        'Brute Force -XSS': -1,
+        'FTP-BruteForce': -1,
+        'SQL Injection': -1,
+        'Bot': -1,
+        'Infilteration': -1,
+        'Benign': 1
+    }
 
-    # set normal label to 1
-    y.replace('Benign', 1, inplace=True)
-
+    y = y.replace(to_replace=labels)
     return y
 
 
-def process_infinity(x):
+def drop_infinity(x):
+    """Drop all the Infinity value rows"""
+    log.info('Processing Infinity values...')
+    return x[~x.isin([np.inf, -np.inf]).any(1)]
+
+
+def replace_infinity(x):
     """Replace all the Infinity values with the column's max"""
     log.info('Processing Infinity values...')
     inf_columns = x.columns[np.isinf(x).any()]
@@ -68,20 +73,26 @@ def process_infinity(x):
     return x
 
 
-def process_nan(x):
-    """Replace all the NaN values with the column's median"""
+def drop_nan(x):
+    """Drop all the NaN value rows"""
     log.info('Processing NaN values...')
-    nan_columns = x.loc[:, x.isna().any()].columns
-    for column in nan_columns:
-        if is_numeric_dtype(x[column]):
-            mean = x[column].mean()
-            x[column].fillna(mean, inplace=True)
-        elif is_string_dtype(x[column]):
-            # TODO: this works for IP addresses but maybe not other object/string types
-            x[column].fillna(-1, inplace=True)
-    # imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
-    # x = pd.DataFrame(data=imputer.fit_transform(x.values), columns=x.columns)
-    return x
+    return x[~x.isin([np.nan]).any(1)]
+
+
+def replace_nan(x):
+    """Replace all the NaN values with -1"""
+    log.info('Processing NaN values...')
+    return x.fillna(-1)
+    # for column in x.columns:
+    # log.info('{col} {t}'.format(col=column, t=x[column].dtype))
+    # x[column].fillna(-1)
+    # if is_numeric_dtype(x[column]):
+    #     mean = x[column].mean()
+    #     x[column] = x[column].fillna(mean)
+    # elif is_string_dtype(x[column]):
+    #     # TODO: this works for IP addresses but maybe not other object/string types
+    #     x[column].fillna(-1)
+    # return x
 
 
 def date_to_timestamp(date):
@@ -108,39 +119,41 @@ def process_csv(filepath):
     log.info('Opening {}...'.format(filepath))
 
     # NOTE: we cannot use dtype & converters so we convert the columns manually later
-    chunks = pd.read_csv(filepath, chunksize=config.chunksize,
-                         na_values=['	', '\r\t', '\t', '', 'nan'])
+    data = dd.read_csv(filepath, blocksize=config.blocksize, assume_missing=True,
+                       na_values=['  ', '\r\t', '\t', '', 'nan'])
 
-    x_list = []
-    y_list = []
+    # x = drop_invalid_rows(data)
 
-    for chunk in chunks:
-        chunk = drop_invalid_rows(chunk)
+    # select K best features
+    y = process_labels(data.Label.compute())
+    log.info(y)
 
-        y = process_labels(chunk.Label)
+    # NOTE: comment to use all columns (if memory limitation isn't problematic)
+    x = get_columns(data, best_30)
 
-        # x = chunk.drop(['Timestamp'], axis=1)
-        chunk.Timestamp = chunk.Timestamp.apply(date_to_timestamp)
-        chunk.drop(['Label'], axis=1, inplace=True)
+    x.Timestamp = x.Timestamp.apply(date_to_timestamp, meta=float)
 
-        if 'Flow ID' in chunk.columns:
-            # TODO: use the Flow ID
-            chunk['Flow ID'] = chunk['Flow ID'].astype('category').cat.codes
-            chunk['Src IP'] = chunk['Src IP'].apply(convert_ip_address_to_decimal)
-            chunk['Dst IP'] = chunk['Dst IP'].apply(convert_ip_address_to_decimal)
-            # chunk.drop(['Flow ID'], axis=1, inplace=True)
+    x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal, meta=int)
+    x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal, meta=int)
 
-        x = chunk
-        x = process_infinity(x)
-        x = process_nan(x)
-        # x = x.astype(dtype=csv_dtypes)
+    x = drop_infinity(x)
+    x = drop_nan(x)
 
-        # NOTE: don't drop columns when reading from multiple files since value might vary across files
-        # x = drop_constant_columns(x)
-        x_list.append(x)
-        y_list.append(y)
+    # x = x.astype(dtype=csv_dtypes)
 
-    return pd.concat(x_list), pd.concat(y_list)
+    return x, y
+
+
+def get_columns(x, columns):
+    """Note: This also drops the Label & Flow ID columns"""
+    columns_to_drop = []
+    for column in x.columns:
+        if column not in columns:
+            columns_to_drop.append(column)
+
+    x = x.drop(labels=columns_to_drop, axis=1)
+    log.info('Using columns {cols}'.format(cols=x.columns))
+    return x
 
 
 def process_pcap(filepath):
@@ -153,9 +166,7 @@ def process_pcap(filepath):
         log.info('File {file} does not exist'.format(file=filepath))
         raise Exception()
 
-    # check file type
     filetype = filepath.split('.')[-1]
-
     tshark = get_tshark_path()
 
     # convert pcap to tsv if necessary
@@ -170,26 +181,18 @@ def process_pcap(filepath):
         raise Exception()
 
     # NOTE don't use dtypes for pcaps
-    chunks = pd.read_table(tshark_filepath, chunksize=config.chunksize,
-                           na_values=['	', '\r\t', '\t', '', 'nan'])
+    data = dd.read_table(tshark_filepath, blocksize=config.blocksize,
+                         assume_missing=True, na_values=['  ', '\r\t', '\t', '', 'nan'])
 
-    x_list = []
+    x = replace_nan(data)
+    x = process_addresses(x)
 
-    for chunk in chunks:
-        x = chunk
-        # x = process_infinity(x)
-        x = process_nan(x)
-        x = process_addresses(x)
+    # x = x.astype(dtype=pcap_dtypes)
 
-        x = x.astype(dtype=pcap_dtypes)
+    # NOTE: comment out to disable additional statistical features from Kitsune
+    # x = feature_engineering(x)
 
-        # NOTE: comment out to disable additional statistical features from Kitsune
-        x = feature_engineering(x)
-        x_list.append(x)
-
-    # NOTE: don't drop columns when reading from multiple files since value might vary across files
-    # x = drop_constant_columns(x)
-    return pd.concat(x_list)
+    return x
 
 
 def feature_engineering(x):
@@ -198,7 +201,7 @@ def feature_engineering(x):
     maxSess = 255
     netStats = NetworkStatistics(np.nan, maxHost, maxSess)
 
-    x.apply(lambda row: feature_stats(row, netStats))
+    x.compute().apply(lambda row: feature_stats(row, netStats))
 
     return x
 
@@ -251,19 +254,19 @@ def feature_stats(row, netStats):
 def process_addresses(x):
     """Convert MAC & IP addresses to decimal values"""
     log.info('Processing addresses...')
-    x['eth.src'] = x['eth.src'].apply(mac_to_decimal)
-    x['eth.dst'] = x['eth.dst'].apply(mac_to_decimal)
-    x['arp.src.hw_mac'] = x['arp.src.hw_mac'].apply(mac_to_decimal)
-    x['arp.dst.hw_mac'] = x['arp.dst.hw_mac'].apply(mac_to_decimal)
+    x['eth.src'] = x['eth.src'].apply(mac_to_decimal, meta=int)
+    x['eth.dst'] = x['eth.dst'].apply(mac_to_decimal, meta=int)
+    x['arp.src.hw_mac'] = x['arp.src.hw_mac'].apply(mac_to_decimal, meta=int)
+    x['arp.dst.hw_mac'] = x['arp.dst.hw_mac'].apply(mac_to_decimal, meta=int)
 
     # x['ip.src'].fillna(-1, inplace=True)
-    x['ip.src'] = x['ip.src'].apply(ipv4_to_decimal)
-    x['ip.dst'] = x['ip.dst'].apply(ipv4_to_decimal)
-    x['arp.src.proto_ipv4'] = x['arp.src.proto_ipv4'].apply(ipv4_to_decimal)
-    x['arp.dst.proto_ipv4'] = x['arp.dst.proto_ipv4'].apply(ipv4_to_decimal)
+    x['ip.src'] = x['ip.src'].apply(ipv4_to_decimal, meta=int)
+    x['ip.dst'] = x['ip.dst'].apply(ipv4_to_decimal, meta=int)
+    x['arp.src.proto_ipv4'] = x['arp.src.proto_ipv4'].apply(ipv4_to_decimal, meta=int)
+    x['arp.dst.proto_ipv4'] = x['arp.dst.proto_ipv4'].apply(ipv4_to_decimal, meta=int)
 
-    x['ipv6.src'] = x['ipv6.src'].apply(ipv6_to_decimal)
-    x['ipv6.dst'] = x['ipv6.dst'].apply(ipv6_to_decimal)
+    x['ipv6.src'] = x['ipv6.src'].apply(ipv6_to_decimal, meta=int)
+    x['ipv6.dst'] = x['ipv6.dst'].apply(ipv6_to_decimal, meta=int)
     return x
 
 
@@ -286,22 +289,20 @@ def pcap2tsv_with_tshark(tshark, filepath):
 
 def mac_to_decimal(mac_addr):
     if mac_addr == -1:
-        return mac_addr
+        return -1
     else:
         return int(str(mac_addr).replace(':', ''), 16)
 
 
 def ipv4_to_decimal(ipv4_addr):
     if ipv4_addr == -1:
-        return ipv4_addr
+        return -1
     else:
         return int(IPv4Address(ipv4_addr))
 
 
 def ipv6_to_decimal(ipv6_addr):
-    if ipv6_addr == -1:
-        return ipv6_addr
-    elif type(ipv6_addr) == float and np.isnan(ipv6_addr):
+    if ipv6_addr == -1 or (type(ipv6_addr) == float and np.isnan(ipv6_addr)):
         return -1
     else:
         return int(IPv6Address(ipv6_addr))

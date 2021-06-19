@@ -31,9 +31,6 @@ class ConnectionFeatureExtractor:
             return []
 
         # Parse next packet
-        # log.info(self.current_packet_index)
-        # log.info(self.limit)
-        # log.info(row)
         connection = Connection(
             timestamp_start=row[0],
             link_protocol=row[1],

@@ -30,7 +30,7 @@ class GMix:
         log.info('Training the Gaussian Mixture Model')
 
         if not self.params:
-            self.params = {'n_components': 1,
+            self.params = {'n_components': 2,
                            'covariance_type': 'full',
                            'verbose': 1,
                            'n_init': 1,
