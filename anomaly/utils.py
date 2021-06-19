@@ -123,6 +123,8 @@ def process_csv(filepath):
                        na_values=['  ', '\r\t', '\t', '', 'nan'])
 
     # x = drop_invalid_rows(data)
+    data = drop_infinity(data)
+    data = drop_nan(data)
 
     # select K best features
     y = process_labels(data.Label.compute())
@@ -135,9 +137,6 @@ def process_csv(filepath):
 
     x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal, meta=int)
     x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal, meta=int)
-
-    x = drop_infinity(x)
-    x = drop_nan(x)
 
     # x = x.astype(dtype=csv_dtypes)
 
