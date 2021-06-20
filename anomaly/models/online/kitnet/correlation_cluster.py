@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import numpy as np
+import logging as log
 from scipy.cluster.hierarchy import linkage, fcluster, to_tree
 
 

@@ -238,6 +238,7 @@ def main():
                     detector.run()
             else:
                 detector = build_online_model(args, path, reader, feature_extractor)
+                detector.run()
 
     end_time = datetime.now()
     log.info('Execution time: {time}'.format(time=(end_time - start_time)))
