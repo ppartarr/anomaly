@@ -176,7 +176,11 @@ def main():
 
     # online training methods
     else:
-        if args.pcap:
+        if args.csv:
+            path = args.csv
+            reader = CSVReader
+            feature_extractor = NetworkFlowFeatureExtractor
+        elif args.pcap:
             # Try convert PCAP file to TSV and use TSV reader if tshark is in path (much faster than scapy)
             if os.path.isfile(args.pcap + '.tsv'):
                 log.info('TSV already exists, using tshark')
