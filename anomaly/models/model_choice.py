@@ -17,8 +17,8 @@ model_choice = {
     'gboost': GBoost,
     # 'lof': LOF,
     'gmix': GMix,
-    'svm': SVM,
-    'offline': [IForest, GBoost, GMix, SVM],
+    # 'svm': SVM,
+    'offline': [IForest, GBoost, GMix],
     # online
     'kitsune': Kitsune,
     'hstree': HSTree,    # incremental iforest
