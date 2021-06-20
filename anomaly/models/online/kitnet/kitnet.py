@@ -4,6 +4,7 @@
 import numpy as np
 from .auto_encoder import AutoEncoder, AutoEncoderParams
 from .correlation_cluster import CorrelationCluster
+import logging as log
 
 
 class KitNET:

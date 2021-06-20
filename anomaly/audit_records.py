@@ -34,8 +34,8 @@ audit_records = {
         'socket': '/tmp/ARP.sock',
         'feature_extractor': ARPFeatureExtractor
     },
-    'Connections': {
-        'socket': '/tmp/Connections.sock',
+    'Connection': {
+        'socket': '/tmp/Connection.sock',
         'feature_extractor': ConnectionFeatureExtractor
     },
     'Credentials': {

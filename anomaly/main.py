@@ -73,6 +73,7 @@ import time
 import glob
 import matplotlib.pyplot as plt
 import logging as log
+import threading
 
 
 def train(x, y, model, tune):
@@ -208,14 +209,23 @@ def main():
             for audit_record_type in args.audit:
                 path = audit_records[audit_record_type]['socket']
                 feature_extractor = audit_records[audit_record_type]['feature_extractor']
+                threads = []
 
                 # allow experiments on multiple sockets comparing online models
                 if args.model == 'online':
                     for model in model_choice[args.model]:
+                        # don't run different models in different threads to avoid messy logging
                         detector = build_online_model(args, path, reader, feature_extractor)
                         detector.run()
+
                 else:
                     detector = build_online_model(args, path, reader, feature_extractor)
+                    thread = threading.Thread(target=detector.run(), name=model)
+                    threads.append(thread)
+
+                for thread in threads:
+                    thread.join()
+                    log.info('Thread {name} is done'.format(name=thread.name))
         else:
             path = get_path(args)
             feature_extractor = get_feature_extractor(args)
