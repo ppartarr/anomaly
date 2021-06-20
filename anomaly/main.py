@@ -97,7 +97,10 @@ def train(x, y, model, tune):
 
         # handle exceptions so that one failing model doesn't cause failure(when using --offline)
         try:
+            start_time = datetime.now()
             classifier.train()
+            end_time = datetime.now()
+            log.info('Model execution time: {time}'.format(time=(end_time - start_time)))
         except Exception as e:
             log.error(e)
 
@@ -415,7 +418,6 @@ def get_feature_extractor(args):
     elif args.ipv4:
         feature_extractor = IPv4FeatureExtractor
     elif args.ipv6hop:
-        path = args.ipv6hop
         feature_extractor = IPv6HopByHopFeatureExtractor
     elif args.ipv6:
         feature_extractor = IPv6FeatureExtractor

@@ -4,3 +4,4 @@ docs/
 todo.md
 **/__pycache__/
 anomaly.log
+dask-worker-space/
