@@ -40,10 +40,10 @@ class KitNET:
         self.n_executed = 0  # the number of executed instances so far
         self.v = feature_map
         if self.v is None:
-            print("Feature-Mapper: train-mode, Anomaly-Detector: off-mode")
+            log.info("Feature-Mapper: train-mode, Anomaly-Detector: off-mode")
         else:
             self.__createAD__()
-            print("Feature-Mapper: execute-mode, Anomaly-Detector: train-mode")
+            log.info("Feature-Mapper: execute-mode, Anomaly-Detector: train-mode")
         # incremental feature cluatering for the feature mapping process
         self.feature_mapper = CorrelationCluster(self.n)
         self.ensemble_layer = []
@@ -64,14 +64,14 @@ class KitNET:
     def train(self, x):
         # If the FM is in train-mode, and the user has not supplied a feature mapping
         if self.n_trained <= self.feature_mapping_training_samples and self.v is None:
-            # update the incremetnal correlation matrix
+            # update the incremental correlation matrix
             self.feature_mapper.update(x)
             if self.n_trained == self.feature_mapping_training_samples:  # If the feature mapping should be instantiated
                 self.v = self.feature_mapper.cluster(self.m)
                 self.__createAD__()
-                print("The Feature-Mapper found a mapping: "+str(self.n) +
-                      " features to "+str(len(self.v))+" autoencoders.")
-                print("Feature-Mapper: execute-mode, Anomaly-Detector: train-mode")
+                log.info("The Feature-Mapper found a mapping: "+str(self.n) +
+                         " features to "+str(len(self.v))+" autoencoders.")
+                log.info("Feature-Mapper: execute-mode, Anomaly-Detector: train-mode")
         else:  # train
             # Ensemble Layer
             S_l1 = np.zeros(len(self.ensemble_layer))
@@ -82,7 +82,7 @@ class KitNET:
             # OutputLayer
             self.output_layer.train(S_l1)
             if self.n_trained == self.anomaly_detector_training_samples+self.feature_mapping_training_samples:
-                print("Feature-Mapper: execute-mode, Anomaly-Detector: execute-mode")
+                log.info("Feature-Mapper: execute-mode, Anomaly-Detector: execute-mode")
         self.n_trained += 1
 
     # force execute KitNET on x

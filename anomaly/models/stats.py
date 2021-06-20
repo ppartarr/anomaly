@@ -26,10 +26,10 @@ def print_stats_labelled(y, guesses, y_test):
     # ROC AUC score is not defined if there is only one class in y_true
     if len(y_test.value_counts()) > 1:
         auc = roc_auc_score(y_test, guesses)
-        print('area under the curve: {auc}'.format(auc=auc))
+        log.info('area under the curve: {auc}'.format(auc=auc))
 
     f1 = f1_score(y_test, guesses)
-    print('f1 score: {f1}'.format(f1=f1))
+    log.info('f1 score: {f1}'.format(f1=f1))
 
 
 def print_stats_unlabelled(y, guesses):

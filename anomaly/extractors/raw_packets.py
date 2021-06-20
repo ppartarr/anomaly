@@ -22,7 +22,7 @@ log = log.getLogger(__name__)
 
 use_extrapolation = False  # experimental correlation code
 if use_extrapolation:
-    print("Importing AfterImage Cython Library")
+    log.info("Importing AfterImage Cython Library")
     if not os.path.isfile("AfterImage.c"):  # has not yet been compiled, so try to do so...
         cmd = "python setup.py build_ext --inplace"
         subprocess.call(cmd, shell=True)
@@ -33,7 +33,7 @@ class RawPacketFeatureExtractor:
     If wireshark is installed (tshark) it is used to parse (it's faster), otherwise, scapy is used (much slower).
     If wireshark is used then a tsv file (parsed version of the pcap) will be made -which you can use as your input next time"""
 
-    def __init__(self, path, reader, limit=np.inf):
+    def __init__(self, path, reader, limit=np.inf, encoded=None):
         self.path = path
         self.reader = reader(path, limit)
         self.limit = limit
@@ -143,5 +143,5 @@ class RawPacketFeatureExtractor:
                                                             int(framelen),
                                                             float(timestamp))
         except Exception as e:
-            print(e)
+            log.info(e)
             return []

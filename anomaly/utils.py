@@ -128,7 +128,6 @@ def process_csv(filepath):
 
     # select K best features
     y = process_labels(data.Label.compute())
-    log.info(y)
 
     # NOTE: comment to use all columns (if memory limitation isn't problematic)
     x = get_columns(data, best_30)
@@ -279,11 +278,11 @@ def get_tshark_path():
 
 
 def pcap2tsv_with_tshark(tshark, filepath):
-    print('Parsing with tshark...')
+    log.info('Parsing with tshark...')
     fields = '-e frame.time_epoch -e frame.len -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e icmp.type -e icmp.code -e arp.opcode -e arp.src.hw_mac -e arp.src.proto_ipv4 -e arp.dst.hw_mac -e arp.dst.proto_ipv4 -e ipv6.src -e ipv6.dst'
     cmd = '"' + tshark + '" -r ' + filepath + ' -T fields ' + fields + ' -E header=y -E occurrence=f > '+filepath+".tsv"
     subprocess.call(cmd, shell=True)
-    print('tshark parsing complete. File saved as {filepath}.tsv'.format(filepath=filepath))
+    log.info('tshark parsing complete. File saved as {filepath}.tsv'.format(filepath=filepath))
 
 
 def mac_to_decimal(mac_addr):

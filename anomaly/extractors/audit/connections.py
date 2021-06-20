@@ -10,52 +10,62 @@ from anomaly.utils import mac_to_decimal, ipv4_to_decimal, ipv6_to_decimal, conv
 
 
 class ConnectionFeatureExtractor:
-    def __init__(self, path, reader, limit=np.inf):
+    def __init__(self, path, reader, limit=np.inf, encoded=False):
         self.path = path
         self.reader = reader(path, limit)
         self.limit = limit
+        self.encoded = encoded
 
         # Prep feature extractor
         max_hosts = 100000000000
         max_sessions = 100000000000
+
         self.connection_statistics = ConnectionStatistics(np.nan, max_hosts, max_sessions)
 
     def get_num_features(self):
-        log.info('There are {num_headers} features'.format(
-            num_headers=len(self.connection_statistics.get_net_stat_headers())))
-        return len(self.connection_statistics.get_net_stat_headers())
+        if not self.encoded:
+            num_features = len(self.connection_statistics.get_net_stat_headers())
+        else:
+            num_features = 17
+
+        log.info('There are {num_headers} features'.format(num_headers=num_features))
+        return num_features
 
     def get_next_vector(self):
         row = self.reader.get_next_row()
         if row == []:
             return []
 
-        # Parse next packet
-        connection = Connection(
-            timestamp_start=row[0],
-            link_protocol=row[1],
-            network_protocol=row[2],
-            transport_protocol=row[3],
-            application_protocol=row[4],
-            srcMAC=row[5],
-            dstMAC=row[6],
-            srcIP=row[7],
-            src_port=row[8],
-            dstIP=row[9],
-            dst_port=row[10],
-            total_size=row[11],
-            payload_size=row[12],
-            num_packets=row[13],
-            uid=row[14],
-            duration=row[15],
-            timestamp_end=row[16]
-        )
+        conn = {
+            'timestamp_start': row[0],
+            'link_protocol': row[1],
+            'network_protocol': row[2],
+            'transport_protocol': row[3],
+            'application_protocol': row[4],
+            'srcMAC': row[5],
+            'dstMAC': row[6],
+            'srcIP': row[7],
+            'src_port': row[8],
+            'dstIP': row[9],
+            'dst_port': row[10],
+            'total_size': row[11],
+            'payload_size': row[12],
+            'num_packets': row[13],
+            'uid': row[14],
+            'duration': row[15],
+            'timestamp_end': row[16]
+        }
 
-        try:
-            return self.connection_statistics.update_get_stats(connection)
-        except Exception as exception:
-            log.error(exception)
-            return []
+        if not self.encoded:
+            # Parse next packet
+            try:
+                connection = Connection(**conn)
+                return self.connection_statistics.update_get_stats(connection)
+            except Exception as exception:
+                log.error(exception)
+                return []
+        else:
+            return np.fromiter(conn.values(), dtype=float)
 
 
 class Connection:

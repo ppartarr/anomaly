@@ -76,4 +76,4 @@ class SVM:
         best_model = grid_search.fit(self.x_train, self.y_train)
         self.params = best_model.best_params_
 
-        print('Best parameters', best_model.best_params_)
+        log.info('Best parameters', best_model.best_params_)

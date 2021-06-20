@@ -4,6 +4,7 @@
 import argparse
 import glob
 import pandas as pd
+from logging import log
 
 
 def stats(data_dir_path):
@@ -33,14 +34,14 @@ def stats(data_dir_path):
 
             unique_labels = unique_labels.union(set(chunk['Label'].unique()))
 
-        # print('benign: {b}'.format(b=benign))
-        # print('anom: {a}'.format(a=anom))
-        # print('rows: {r}'.format(r=rows))
-        print('{file} percentage of malicious flows: {percentage}'.format(
+        # log.info('benign: {b}'.format(b=benign))
+        # log.info('anom: {a}'.format(a=anom))
+        # log.info('rows: {r}'.format(r=rows))
+        log.info('{file} percentage of malicious flows: {percentage}'.format(
             file=file, percentage=100*(anom/(benign + anom))))
-        print('unique labels: {unique_labels}'.format(unique_labels=unique_labels))
+        log.info('unique labels: {unique_labels}'.format(unique_labels=unique_labels))
 
-    print('total percentage of malicious flows: {percentage}'.format(
+    log.info('total percentage of malicious flows: {percentage}'.format(
         percentage=100*(total_anom/(total_benign + total_benign))))
 
 

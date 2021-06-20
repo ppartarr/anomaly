@@ -5,7 +5,7 @@ import logging as log
 import numpy as np
 
 from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
-from anomaly.extractors.connections import ConnectionFeatureExtractor
+from anomaly.extractors.audit.connections import ConnectionFeatureExtractor
 from scipy.stats import norm
 from matplotlib import pyplot as plt
 from matplotlib import cm

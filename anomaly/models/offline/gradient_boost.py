@@ -71,4 +71,4 @@ class GBoost:
 
         self.params = best_model.best_params_
 
-        print('Best parameters', best_model.best_params_)
+        log.info('Best parameters', best_model.best_params_)

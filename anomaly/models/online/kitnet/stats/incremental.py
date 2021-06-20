@@ -175,7 +175,7 @@ class StatisticsCovarience:
         elif ID == self.Statistics[1].ID:
             inc = 1
         else:
-            print("update_cov ID error")
+            log.info("update_cov ID error")
             return  # error
 
         # Decay other Statistics
