@@ -190,7 +190,10 @@ def main():
     if not is_model_online(args.model):
 
         # start dask dashboard
-        client = Client(n_workers=2, threads_per_worker=4, processes=True, memory_limit='4GB')
+        client = Client(n_workers=config.n_workers,
+                        threads_per_worker=config.threads_per_worker,
+                        processes=True,
+                        memory_limit=config.memory_limit)
         log.info('connect to the dask dashboard at {url}'.format(url='http://localhost:8787/status'))
 
         x, y = get_offline_data(args)

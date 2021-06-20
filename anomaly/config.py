@@ -21,3 +21,6 @@ n_jobs = -1
 # reading from csv & pcaps
 chunksize = 500000
 blocksize = '16MB'
+memory_limit = '8GB'
+n_workers = 2
+threads_per_worker = 4
