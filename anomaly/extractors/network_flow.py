@@ -14,6 +14,11 @@ class NetworkFlowFeatureExtractor:
         self.limit = limit
         self.encoded = encoded
 
+        # skip comment & header if reading from netcap audit record csv
+        if isinstance(self.reader, SocketReader):
+            self.reader.get_next_row()
+            self.reader.get_next_row()
+
     def get_num_features(self):
         num_features = 81
 

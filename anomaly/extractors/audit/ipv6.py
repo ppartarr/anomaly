@@ -6,6 +6,7 @@ import numpy as np
 
 from anomaly.extractors.protocols import convert_protocol_name_to_number
 from anomaly.models.online.kitnet.stats.connection import ConnectionStatistics
+from anomaly.readers.socket import SocketReader
 from anomaly.utils import mac_to_decimal, ipv4_to_decimal, ipv6_to_decimal, convert_ip_address_to_decimal
 
 
@@ -15,6 +16,11 @@ class IPv6FeatureExtractor:
         self.reader = reader(path, limit)
         self.limit = limit
         self.encoded = encoded
+
+        # skip comment & header if reading from netcap audit record csv
+        if isinstance(self.reader, SocketReader):
+            self.reader.get_next_row()
+            self.reader.get_next_row()
 
         # Prep feature extractor
         # max_hosts = 100000000000

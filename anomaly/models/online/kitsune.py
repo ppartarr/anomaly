@@ -19,6 +19,7 @@ class Kitsune:
 
         self.path = path
         self.encoded = encoded
+
         self.feature_mapping_training_samples = feature_mapping_training_samples
         self.anomaly_detector_training_samples = anomaly_detector_training_samples
 

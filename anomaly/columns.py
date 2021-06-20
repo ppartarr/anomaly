@@ -15,7 +15,7 @@ csv_dtypes = {
     'Tot Fwd Pkts': np.int64,
     'Tot Bwd Pkts': np.int64,
     'TotLen Fwd Pkts': np.int64,
-    'TotLen Bwd Pkts': np.float64,
+    'TotLen Bwd Pkts': np.int64,
     'Fwd Pkt Len Max': np.int64,
     'Fwd Pkt Len Min': np.int64,
     'Fwd Pkt Len Mean': np.float64,
