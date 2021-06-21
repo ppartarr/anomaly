@@ -13,12 +13,15 @@ from matplotlib import cm
 from river import metrics, compose, preprocessing
 from river.anomaly import HalfSpaceTrees
 
+from anomaly.models.stats import plot
+
 
 class HSTree:
     """Half Space Tree (online Isolation Forest variant)
     https://riverml.xyz/latest/api/anomaly/HalfSpaceTrees/"""
 
     def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000):
+        self.name = 'Half Space Tree'
         self.path = path
         self.current_packet_index = 0
         self.anomaly_detector_training_samples = anomaly_detector_training_samples
@@ -70,19 +73,10 @@ class HSTree:
             root_mean_squared_errors[self.anomaly_detector_training_samples+1:100000])
         log_probs = norm.logsf(np.log(root_mean_squared_errors), np.mean(benign_sample), np.std(benign_sample))
 
-        # plot the RMSE anomaly scores
-        log.info("Plotting results")
-        plt.figure(figsize=(10, 5))
-        fig = plt.scatter(
-            range(self.anomaly_detector_training_samples+1, len(root_mean_squared_errors)),
-            root_mean_squared_errors[self.anomaly_detector_training_samples+1:],
-            s=0.1,
-            c=log_probs[self.anomaly_detector_training_samples+1:],
-            cmap='RdYlGn')
-        plt.yscale("log")
-        plt.title("Anomaly Scores from HSTree's Execution Phase")
-        plt.ylabel("RMSE (log scaled)")
-        plt.xlabel("Time elapsed [min]")
-        figbar = plt.colorbar()
-        figbar.ax.set_ylabel('Log Probability\n ', rotation=270)
-        plt.show()
+        plot(self.name,
+             './images/hstree.png',
+             root_mean_squared_errors,
+             benign_sample,
+             log_probs,
+             self.anomaly_detector_training_samples
+             )

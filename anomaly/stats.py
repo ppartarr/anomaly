@@ -4,7 +4,7 @@
 import argparse
 import glob
 import pandas as pd
-from logging import log
+import logging as log
 
 
 def stats(data_dir_path):

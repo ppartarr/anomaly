@@ -22,5 +22,5 @@ n_jobs = -1
 chunksize = 500000
 blocksize = '16MB'
 memory_limit = '8GB'
-n_workers = 2
-threads_per_worker = 4
+n_workers = 4
+threads_per_worker = 8

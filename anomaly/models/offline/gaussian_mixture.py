@@ -7,6 +7,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import silhouette_score
 
 import logging as log
+import dask.dataframe as dd
 
 from anomaly.models.stats import print_stats_labelled
 
@@ -15,12 +16,12 @@ class GMix:
     """Gaussian Mixture model"""
 
     def __init__(self, x, y, x_train, x_test, y_train, y_test):
-        self.x = x
-        self.y = y
-        self.x_train = x_train
-        self.x_test = x_test
-        self.y_train = y_train
-        self.y_test = y_test
+        self.x = x.compute() if isinstance(x, dd.DataFrame) else x
+        self.y = y.compute() if isinstance(y, dd.Series) else y
+        self.x_train = x_train.compute() if isinstance(x_train, dd.DataFrame) else x_train
+        self.x_test = x_test.compute() if isinstance(x_test, dd.DataFrame) else x_test
+        self.y_train = y_train.compute() if isinstance(y_train, dd.Series) else y_train
+        self.y_test = y_test.compute() if isinstance(y_test, dd.Series) else y_test
 
         self.gmm = None
         self.params = None
@@ -72,4 +73,4 @@ class GMix:
 
         self.params = best_model.best_params_
 
-        log.info('Best parameters', best_model.best_params_)
+        log.info('Best parameters {best}'.format(best=best_model.best_params_))

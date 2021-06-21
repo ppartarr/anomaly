@@ -9,6 +9,7 @@ from anomaly.models.stats import print_stats_labelled
 
 import logging as log
 import numpy as np
+import dask.dataframe as dd
 
 log = log.getLogger(__name__)
 
@@ -17,12 +18,12 @@ class SVM:
     """One Class Support Vector Machine"""
 
     def __init__(self, x, y, x_train, x_test, y_train, y_test):
-        self.x = x
-        self.y = y
-        self.x_train = x_train
-        self.x_test = x_test
-        self.y_train = y_train
-        self.y_test = y_test
+        self.x = x.compute() if isinstance(x, dd.DataFrame) else x
+        self.y = y.compute() if isinstance(y, dd.Series) else y
+        self.x_train = x_train.compute() if isinstance(x_train, dd.DataFrame) else x_train
+        self.x_test = x_test.compute() if isinstance(x_test, dd.DataFrame) else x_test
+        self.y_train = y_train.compute() if isinstance(y_train, dd.Series) else y_train
+        self.y_test = y_test.compute() if isinstance(y_test, dd.Series) else y_test
 
         self.svm = None
         self.params = None
@@ -30,28 +31,16 @@ class SVM:
     def train(self):
         """Train the Support Vector Machine model"""
         log.info('Training the Support Vector Machine model')
-        # Training with labels
-        if not self.y.empty:
-            if not self.params:
-                self.params = {'verbose': True}
 
-            self.svm = OneClassSVM(**self.params, cache_size=400)
+        if not self.params:
+            self.params = {'verbose': True}
 
-            classifier = self.svm.fit(self.x_train)
-            guesses = classifier.predict(self.x_test)
+        self.svm = OneClassSVM(**self.params, cache_size=4000)
 
-            print_stats_labelled(self.y, guesses, self.y_test)
-        # Training without labels
-        else:
-            self.svm = OneClassSVM(
-                verbose=True,
-                cache_size=200  # in MBytes
-            )
+        classifier = self.svm.fit(self.x_train)
+        guesses = classifier.predict(self.x_test)
 
-            classifier = self.svm.fit(self.x_train)
-            guesses = classifier.predict(self.x_test)
-
-            log.info(np.unique(guesses, return_counts=True))
+        print_stats_labelled(self.y, guesses, self.y_test)
 
     def predict(self, x):
         return self.svm.predict(x)
@@ -76,4 +65,4 @@ class SVM:
         best_model = grid_search.fit(self.x_train, self.y_train)
         self.params = best_model.best_params_
 
-        log.info('Best parameters', best_model.best_params_)
+        log.info('Best parameters {best}'.format(best=best_model.best_params_))

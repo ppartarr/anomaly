@@ -3,5 +3,6 @@ __all__ = [
     'gradient_boost',
     'isolation_forest',
     'local_outlier_factor',
-    'svm'
+    'svm',
+    'sdg'
 ]

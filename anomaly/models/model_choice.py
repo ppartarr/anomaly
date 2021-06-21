@@ -6,6 +6,8 @@ from anomaly.models.offline.isolation_forest import IForest
 from anomaly.models.offline.gaussian_mixture import GMix
 from anomaly.models.offline.local_outlier_factor import LOF
 from anomaly.models.offline.svm import SVM
+from anomaly.models.offline.sdg import SDG
+
 
 from anomaly.models.online.kitsune import Kitsune
 from anomaly.models.online.half_space_tree import HSTree
@@ -18,14 +20,15 @@ model_choice = {
     'lof': LOF,
     'gmix': GMix,
     'svm': SVM,
+    'sdg': SDG,
     'offline': [IForest, GBoost, GMix],
     # online
     'kitsune': Kitsune,
     'hstree': HSTree,    # incremental iforest
     'igboost': IGBoost,  # incremental gradient boost
-    'online': [Kitsune, HSTree, IGBoost]
+    'online': ['kitsune', 'hstree', 'igboost']
 }
 
 
 def is_model_online(model):
-    return model_choice[model] in model_choice['online']
+    return model == 'online' or model_choice[model] in model_choice['online']

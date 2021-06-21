@@ -7,7 +7,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_auc_score, f1_score
 from pandas.api.types import is_numeric_dtype, is_string_dtype
 
-from anomaly.columns import csv_dtypes, pcap_dtypes, best_30
+from anomaly.columns import csv_dtypes, pcap_dtypes, best_30, tsv_columns
 from anomaly.models.online.kitnet.stats.network import NetworkStatistics
 import anomaly.config as config
 
@@ -35,20 +35,20 @@ def process_labels(y):
     # set all malicious labels to -1
     # label names obtained from stats.py
     labels = {
-        'DoS attacks-SlowHTTPTest': -1,
-        'DoS attacks-GoldenEye': -1,
-        'DoS attacks-Hulk': -1,
-        'DoS attacks-Slowloris': -1,
-        'DDOS attack-LOIC-UDP': -1,
-        'DDoS attacks-LOIC-HTTP': -1,
-        'DDOS attack-HOIC': -1,
-        'SSH-Bruteforce': -1,
-        'Brute Force -Web': -1,
-        'Brute Force -XSS': -1,
-        'FTP-BruteForce': -1,
-        'SQL Injection': -1,
-        'Bot': -1,
-        'Infilteration': -1,
+        'DoS attacks-SlowHTTPTest': 0,
+        'DoS attacks-GoldenEye': 0,
+        'DoS attacks-Hulk': 0,
+        'DoS attacks-Slowloris': 0,
+        'DDOS attack-LOIC-UDP': 0,
+        'DDoS attacks-LOIC-HTTP': 0,
+        'DDOS attack-HOIC': 0,
+        'SSH-Bruteforce': 0,
+        'Brute Force -Web': 0,
+        'Brute Force -XSS': 0,
+        'FTP-BruteForce': 0,
+        'SQL Injection': 0,
+        'Bot': 0,
+        'Infilteration': 0,
         'Benign': 1
     }
 
@@ -126,20 +126,31 @@ def process_csv(filepath):
     data = drop_infinity(data)
     data = drop_nan(data)
 
-    # select K best features
-    y = process_labels(data.Label.compute())
+    # convert pandas series back into dask dataframe
+    y = process_labels(data.Label)
 
     # NOTE: comment to use all columns (if memory limitation isn't problematic)
     x = get_columns(data, best_30)
 
-    x.Timestamp = x.Timestamp.apply(date_to_timestamp, meta=float)
+    # x = add_pair_frequency(x, ['Dst Port', 'Protocol'], 'DstPort-protocol pair')
+    # x = add_pair_frequency(x, ['Src Port', 'Protocol'], 'SrcPort-Protocol pair')
 
-    x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal, meta=int)
-    x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal, meta=int)
+    # x.Timestamp = x.Timestamp.apply(date_to_timestamp, meta=float)
+
+    # x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal, meta=int)
+    # x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal, meta=int)
 
     # x = x.astype(dtype=csv_dtypes)
 
     return x, y
+
+
+def add_pair_frequency(x, pair, column_name):
+    # note type: dask.Series
+    x[column_name] = x.groupby(pair)[pair[0]].transform('count', meta=int)
+    # len(x[column_name])
+    # len(x['Dst Port'])
+    return x
 
 
 def get_columns(x, columns):
@@ -150,7 +161,6 @@ def get_columns(x, columns):
             columns_to_drop.append(column)
 
     x = x.drop(labels=columns_to_drop, axis=1)
-    log.info('Using columns {cols}'.format(cols=x.columns))
     return x
 
 
@@ -184,6 +194,9 @@ def process_pcap(filepath):
 
     x = replace_nan(data)
     x = process_addresses(x)
+
+    # drop timestamp and address columns
+    x = get_columns(x, tsv_columns)
 
     # x = x.astype(dtype=pcap_dtypes)
 

@@ -4,8 +4,10 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.metrics import roc_auc_score, f1_score
 import logging as log
 import numpy as np
+from scipy.stats import norm
 
-log = log.getLogger(__name__)
+from matplotlib import pyplot as plt
+from matplotlib import cm
 
 
 def find_best_features(x, x_train, y_train):
@@ -28,7 +30,7 @@ def print_stats_labelled(y, guesses, y_test):
         auc = roc_auc_score(y_test, guesses)
         log.info('area under the curve: {auc}'.format(auc=auc))
 
-    f1 = f1_score(y_test, guesses)
+    f1 = f1_score(y_true=y_test, y_pred=guesses, average='micro')
     log.info('f1 score: {f1}'.format(f1=f1))
 
 
@@ -36,3 +38,24 @@ def print_stats_unlabelled(y, guesses):
     """Statistics for unlabelled data"""
     log.info('guess percentage of anomalies: {percentage:.2f}'.format(
         percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
+
+
+def plot(model, file_name, root_mean_squared_errors, benign_sample, log_probs, anomaly_detector_training_samples, feature_mapping_training_samples=0):
+    # plot the RMSE anomaly scores
+    log.info("Plotting results")
+    plt.figure(figsize=(10, 5))
+    fig = plt.scatter(
+        range(feature_mapping_training_samples +
+              anomaly_detector_training_samples+1, len(root_mean_squared_errors)),
+        root_mean_squared_errors[feature_mapping_training_samples+anomaly_detector_training_samples+1:],
+        s=0.1,
+        c=log_probs[feature_mapping_training_samples+anomaly_detector_training_samples+1:],
+        cmap='RdYlGn')
+    plt.yscale("log")
+    plt.title("Anomaly Scores from " + model + "'s Execution Phase")
+    plt.ylabel("RMSE (log scaled)")
+    plt.xlabel("Packet number")
+    figbar = plt.colorbar()
+    figbar.ax.set_ylabel('Log Probability\n ', rotation=270)
+    plt.show()
+    fig.save

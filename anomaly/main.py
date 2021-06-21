@@ -2,7 +2,8 @@
 # coding: utf-8
 
 from sklearn.ensemble import IsolationForest
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+# from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from dask_ml.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, plot_roc_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
@@ -79,17 +80,19 @@ import threading
 def train(x, y, model, tune):
     """Train a model and calculate performance metrics"""
 
-    # convert from dask to pandas if necessary
-    x = x.compute() if isinstance(x, dd.DataFrame) else x
-    y = y.compute() if isinstance(y, dd.Series) else y
-
     # for labelled data
-    if not y.empty:
+    if len(y.index) != 0:
         # split dataset into train & test
         x_train, x_test, y_train, y_test = train_test_split(
-            x, y, test_size=0.2, shuffle=False)
+            x,
+            y,
+            test_size=0.2,
+            shuffle=False,
+            random_state=42)
 
         # log.info(find_best_features(x, x_train, y_train))
+
+        log.info('Using columns {cols}'.format(cols=x.columns))
 
         classifier = model(x, y, x_train, x_test, y_train, y_test)
         if tune:
@@ -221,11 +224,11 @@ def main():
                 if args.model == 'online':
                     for model in model_choice[args.model]:
                         # don't run different models in different threads to avoid messy logging
-                        detector = build_online_model(args, path, reader, feature_extractor)
+                        detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded)
                         detector.run()
 
                 else:
-                    detector = build_online_model(args, path, reader, feature_extractor)
+                    detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded)
                     thread = threading.Thread(target=detector.run(), name=args.model)
                     thread.start()
                     threads.append(thread)
@@ -238,10 +241,10 @@ def main():
             feature_extractor = get_feature_extractor(args)
             if args.model == 'online':
                 for model in model_choice[args.model]:
-                    detector = build_online_model(args, path, reader, feature_extractor)
+                    detector = build_online_model(model, path, reader, feature_extractor, args.encoded)
                     detector.run()
             else:
-                detector = build_online_model(args, path, reader, feature_extractor)
+                detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded)
                 detector.run()
 
     end_time = datetime.now()
@@ -265,8 +268,9 @@ def get_offline_data(args):
     return x, y
 
 
-def build_online_model(args, path, reader, feature_extractor):
-    if args.model == 'kitsune':
+def build_online_model(model, path, reader, feature_extractor, encoded=False):
+    log.info(model)
+    if model == 'kitsune':
         detector = Kitsune(
             path=path,
             reader=reader,
@@ -275,15 +279,15 @@ def build_online_model(args, path, reader, feature_extractor):
             max_autoencoder_size=config.auto_encoder['max_autoencoders'],
             feature_mapping_training_samples=config.auto_encoder['feature_mapping_training_samples'],
             anomaly_detector_training_samples=config.auto_encoder['anomaly_detector_training_samples'],
-            encoded=args.encoded)
-    elif args.model == 'hstree':
+            encoded=encoded)
+    elif model == 'hstree':
         detector = HSTree(
             path=path,
             reader=reader,
             limit=config.hstree['packet_limit'],
             feature_extractor=feature_extractor,
             anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
-    elif args.model == 'igboost':
+    elif model == 'igboost':
         detector = IGBoost(
             path=path,
             reader=reader,

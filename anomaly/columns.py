@@ -104,19 +104,19 @@ pcap_dtypes = {
     'icmp.type': np.int8,
     'icmp.code': np.int8,
     'arp.opcode': np.int16,
-    'arp.src.hw_mac': np.int64,
-    'arp.src.proto_ipv4': np.int32,
-    'arp.dst.hw_mac': np.int64,
-    'arp.dst.proto_ipv4': np.int32,
-    'ipv6.src': int,
-    'ipv6.dst': int
+    'arp.src.hw_mac': np.object,
+    'arp.src.proto_ipv4': np.object,
+    'arp.dst.hw_mac': np.object,
+    'arp.dst.proto_ipv4': np.object,
+    'ipv6.src': np.object,
+    'ipv6.dst': np.object
 }
 
 best_30 = [
-    'Timestamp',
+    # 'Timestamp',
     # 'Flow ID',
-    'Src IP',
-    'Dst IP',
+    # 'Src IP',
+    # 'Dst IP',
     'Src Port',
     'Dst Port',
     'Protocol',
@@ -145,4 +145,28 @@ best_30 = [
     'Fwd Seg Size Min',
     'Idle Mean',
     'Idle Max',
-    'Idle Min']
+    'Idle Min'
+]
+
+
+tsv_columns = [
+    'frame.time_epoch',
+    'frame.len',
+    'eth.src',
+    'eth.dst',
+    'ip.src',
+    'ip.dst',
+    'tcp.srcport',
+    'tcp.dstport',
+    'udp.srcport',
+    'udp.dstport',
+    'icmp.type',
+    'icmp.code',
+    'arp.opcode',
+    'arp.src.hw_mac',
+    'arp.src.proto_ipv4',
+    'arp.dst.hw_mac',
+    'arp.dst.proto_ipv4',
+    'ipv6.src',
+    'ipv6.dst'
+]

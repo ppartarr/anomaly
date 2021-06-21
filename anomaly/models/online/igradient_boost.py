@@ -6,6 +6,9 @@ import numpy as np
 
 from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.extractors.audit.connections import ConnectionFeatureExtractor
+from anomaly.models.stats import plot
+
+import anomaly.config as config
 from scipy.stats import norm
 from matplotlib import pyplot as plt
 from matplotlib import cm
@@ -14,10 +17,10 @@ from xgboost import XGBClassifier
 
 
 class IGBoost:
-    """ AdaBoost classifier using Hoeffding trees
-    https://riverml.xyz/latest/api/ensemble/AdaBoostClassifier/"""
+    """Incremental Gradient Boosting"""
 
     def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000):
+        self.name = 'Incremental GBoost'
         self.path = path
         self.current_packet_index = 0
         self.anomaly_detector_training_samples = anomaly_detector_training_samples
@@ -29,7 +32,7 @@ class IGBoost:
             max_depth=15,
             learning_rate=0.15,
             verbosity=3,
-            n_jobs=-1
+            n_jobs=config.n_jobs
 
         )
 
@@ -66,19 +69,10 @@ class IGBoost:
             root_mean_squared_errors[self.anomaly_detector_training_samples+1:100000])
         log_probs = norm.logsf(np.log(root_mean_squared_errors), np.mean(benign_sample), np.std(benign_sample))
 
-        # plot the RMSE anomaly scores
-        log.info("Plotting results")
-        plt.figure(figsize=(10, 5))
-        fig = plt.scatter(
-            range(self.anomaly_detector_training_samples+1, len(root_mean_squared_errors)),
-            root_mean_squared_errors[self.anomaly_detector_training_samples+1:],
-            s=0.1,
-            c=log_probs[self.anomaly_detector_training_samples+1:],
-            cmap='RdYlGn')
-        plt.yscale("log")
-        plt.title("Anomaly Scores from HSTree's Execution Phase")
-        plt.ylabel("RMSE (log scaled)")
-        plt.xlabel("Time elapsed [min]")
-        figbar = plt.colorbar()
-        figbar.ax.set_ylabel('Log Probability\n ', rotation=270)
-        plt.show()
+        plot(self.name,
+             './images/igboost.png',
+             root_mean_squared_errors,
+             benign_sample,
+             log_probs,
+             self.anomaly_detector_training_samples
+             )

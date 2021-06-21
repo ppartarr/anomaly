@@ -4,6 +4,7 @@
 from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.extractors.audit.connections import ConnectionFeatureExtractor
 from anomaly.models.online.kitnet.kitnet import KitNET
+from anomaly.models.stats import plot
 import logging as log
 import numpy as np
 from scipy.stats import norm
@@ -16,7 +17,7 @@ class Kitsune:
     """Ensemble of auto-encoders"""
 
     def __init__(self, path, reader, limit, feature_extractor, max_autoencoder_size=10, feature_mapping_training_samples=None, anomaly_detector_training_samples=10000, learning_rate=0.1, hidden_ratio=0.75, encoded=False):
-
+        self.name = 'Kitsune'
         self.path = path
         self.encoded = encoded
 
@@ -58,20 +59,11 @@ class Kitsune:
             root_mean_squared_errors[self.feature_mapping_training_samples+self.anomaly_detector_training_samples+1:10000])
         log_probs = norm.logsf(np.log(root_mean_squared_errors), np.mean(benign_sample), np.std(benign_sample))
 
-        # plot the RMSE anomaly scores
-        log.info("Plotting results")
-        plt.figure(figsize=(10, 5))
-        fig = plt.scatter(
-            range(self.feature_mapping_training_samples +
-                  self.anomaly_detector_training_samples+1, len(root_mean_squared_errors)),
-            root_mean_squared_errors[self.feature_mapping_training_samples+self.anomaly_detector_training_samples+1:],
-            s=0.1,
-            c=log_probs[self.feature_mapping_training_samples+self.anomaly_detector_training_samples+1:],
-            cmap='RdYlGn')
-        plt.yscale("log")
-        plt.title("Anomaly Scores from Kitsune's Execution Phase")
-        plt.ylabel("RMSE (log scaled)")
-        plt.xlabel("Time elapsed [min]")
-        figbar = plt.colorbar()
-        figbar.ax.set_ylabel('Log Probability\n ', rotation=270)
-        plt.show()
+        plot(self.name,
+             './images/kitsune.png',
+             root_mean_squared_errors,
+             benign_sample,
+             log_probs,
+             self.anomaly_detector_training_samples,
+             self.feature_mapping_training_samples
+             )
