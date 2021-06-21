@@ -6,6 +6,8 @@ import numpy as np
 
 from anomaly.utils import mac_to_decimal, ipv4_to_decimal, ipv6_to_decimal, convert_ip_address_to_decimal
 
+from anomaly.readers.socket import SocketReader
+
 
 class NetworkFlowFeatureExtractor:
     def __init__(self, path, reader, limit=np.inf, encoded=False):

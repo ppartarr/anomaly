@@ -6,7 +6,8 @@ __all__ = [
     'columns',
     'config',
     'utils',
-    'audit_records'
+    'audit_records',
+    'convert'
 ]
 
 __version__ = '0.0.0'
