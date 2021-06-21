@@ -227,6 +227,7 @@ def main():
                 else:
                     detector = build_online_model(args, path, reader, feature_extractor)
                     thread = threading.Thread(target=detector.run(), name=args.model)
+                    thread.start()
                     threads.append(thread)
 
                 for thread in threads:

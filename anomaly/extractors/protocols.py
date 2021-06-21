@@ -146,7 +146,7 @@ protocol_numbers = {
     'ROHC': 142,
     'Ethernet': 143,
     # NOTE: manually added protocols
-    'RMPC': 250,
+    'RMCP': 250,
     'NTP': 251,
     'SIP': 252,
     'Payload': 253,
