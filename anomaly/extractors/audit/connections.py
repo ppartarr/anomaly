@@ -22,11 +22,6 @@ class ConnectionFeatureExtractor:
             self.reader.get_next_row()
             self.reader.get_next_row()
 
-        # skip comment & header if reading from netcap audit record csv
-        if isinstance(self.reader, SocketReader):
-            self.reader.get_next_row()
-            self.reader.get_next_row()
-
         # Prep feature extractor
         max_hosts = 100000000000
         max_sessions = 100000000000
@@ -37,7 +32,7 @@ class ConnectionFeatureExtractor:
         if not self.encoded:
             num_features = len(self.connection_statistics.get_net_stat_headers())
         else:
-            num_features = 17
+            num_features = 16
 
         log.info('There are {num_headers} features'.format(num_headers=num_features))
         return num_features
@@ -62,9 +57,8 @@ class ConnectionFeatureExtractor:
             'total_size': row[11],
             'payload_size': row[12],
             'num_packets': row[13],
-            'uid': row[14],
-            'duration': row[15],
-            'timestamp_end': row[16]
+            'duration': row[14],
+            'timestamp_end': row[15]
         }
 
         if not self.encoded:
@@ -97,27 +91,8 @@ class Connection:
                  total_size,
                  payload_size,
                  num_packets,
-                 uid,
                  duration,
                  timestamp_end):
-        # NOTE: debug
-        # log.info('timestamp_start: {data}'.format(data=timestamp_start))
-        # log.info('link_protocol: {data}'.format(data=link_protocol))
-        # log.info('network_protocol: {data}'.format(data=network_protocol))
-        # log.info('transport_protocol: {data}'.format(data=transport_protocol))
-        # log.info('application_protocol: {data}'.format(data=application_protocol))
-        # log.info('srcMAC: {data}'.format(data=srcMAC))
-        # log.info('dstMAC: {data}'.format(data=dstMAC))
-        # log.info('srcIP: {data}'.format(data=srcIP))
-        # log.info('src_port: {data}'.format(data=src_port))
-        # log.info('dstIP: {data}'.format(data=dstIP))
-        # log.info('dst_port: {data}'.format(data=dst_port))
-        # log.info('total_size: {data}'.format(data=total_size))
-        # log.info('payload_size: {data}'.format(data=payload_size))
-        # log.info('num_packets: {data}'.format(data=num_packets))
-        # log.info('uid: {data}'.format(data=uid))
-        # log.info('duration: {data}'.format(data=duration))
-        # log.info('timestamp_end: {data}'.format(data=timestamp_end))
 
         self.timestamp_start = np.int64(timestamp_start)
         self.link_protocol = np.int8(convert_protocol_name_to_number(link_protocol))
@@ -133,7 +108,6 @@ class Connection:
         self.total_size = np.int32(check_numeric_empty(total_size))
         self.payload_size = np.int32(check_numeric_empty(payload_size))
         self.num_packets = np.int32(check_numeric_empty(num_packets))
-        self.uid = np.str(check_numeric_empty(uid))
         self.duration = np.int64(check_numeric_empty(duration))
         self.timestamp_end = np.int64(check_numeric_empty(timestamp_end))
 
