@@ -98,15 +98,16 @@ def convert(args):
                            na_values=['  ', '\r\t', '\t', '', 'nan'])
         data = drop_infinity(data)
         data = drop_nan(data)
-        dd.to_parquet(df=data, path=args.out + os.path.sep + args.csv+'.parquet')
+        dd.to_parquet(df=data, path=args.out + os.path.sep + args.csv + '.parquet')
     elif args.dir:
         files = glob.glob(args.dir + '/' + '*.csv')
         for file in files:
+            file_name = file.split('/')[-1]
             data = dd.read_csv(file, blocksize=config.blocksize, assume_missing=True, dtype=dtype,
                                na_values=['  ', '\r\t', '\t', '', 'nan'])
             data = drop_infinity(data)
             data = drop_nan(data)
-            dd.to_parquet(df=data, path=args.out + os.path.sep + file+'.parquet')
+            dd.to_parquet(df=data, path=args.out + os.path.sep + file_name + '.parquet')
 
 
 def parse_args():
