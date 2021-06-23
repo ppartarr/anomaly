@@ -56,7 +56,7 @@ from anomaly.readers.csv import CSVReader
 from anomaly.readers.pcap import PCAPReader
 from anomaly.readers.tsv import TSVReader, get_tshark_path, pcap2tsv_with_tshark
 from anomaly.readers.socket import SocketReader
-from anomaly.utils import process_csv, process_pcap
+from anomaly.utils import process_csv, process_pcap, process_parquet
 from anomaly.audit_records import audit_records
 from anomaly.models.stats import find_best_features
 
@@ -134,6 +134,8 @@ def parse_args():
     parser.add_argument('--csv-dir', help='directory to read csv network flow data from')
     parser.add_argument('--pcap', help='pcap file to read data from')
     parser.add_argument('--pcap-dir', help='directory to read pcaps from')
+    parser.add_argument('--parquet', help='parquet directory to read network flow data from')
+    parser.add_argument('--parquet-dir', help='parquet directory to multiple parquet directory network flow data from')
     parser.add_argument('--tune', action='store_true', help='tune model before training to find best hyperparameters')
     # NOTE: args for online models
     parser.add_argument('--tsv', help='tsv file to read data from')
@@ -166,11 +168,12 @@ def parse_args():
     parser.add_argument('--audit', help='Read the given audit record types from unix sockets',
                         choices=audit_records, nargs='*')
     parser.add_argument('--encoded', action='store_true', help='Read encoded audit records')
+    parser.add_argument('--labelled', action='store_true', help='Read labelled audit records')
     return parser.parse_args()
 
 
 def validate_args(args):
-    if (args.csv and args.csv_dir and args.pcap):
+    if (args.csv and args.csv_dir and args.pcap and args.parquet):
         raise Exception('Only on of --csv or --dir or --pcap can be specified!')
 
 
@@ -256,6 +259,10 @@ def get_offline_data(args):
         x, y = process_csv(args.csv)
     elif args.csv_dir:
         x, y = process_csv(args.csv_dir + os.path.sep + '*.csv')
+    elif args.parquet:
+        x, y = process_parquet(args.parquet + os.path.sep + '*.parquet')
+    elif args.parquet_dir:
+        x, y = process_parquet(args.parquet_dir + os.path.sep + '*.parquet' + '*.parquet')
     elif args.pcap or args.tsv:
         # NOTE: comment in for pcap offline algs
         x = process_pcap(args.pcap)

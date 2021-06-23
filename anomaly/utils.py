@@ -23,6 +23,7 @@ import subprocess
 import csv
 import sys
 import logging as log
+import dask
 
 log = log.getLogger(__name__)
 
@@ -132,7 +133,9 @@ def process_csv(filepath):
     # NOTE: comment to use all columns (if memory limitation isn't problematic)
     x = get_columns(data, best_30)
 
-    # x = add_pair_frequency(x, ['Dst Port', 'Protocol'], 'DstPort-protocol pair')
+    # x.visualize(filename='./images/dask-graph1.png')
+
+    x = add_pair_frequency(x, ['Dst Port', 'Protocol'], 'DstPort-protocol pair')
     # x = add_pair_frequency(x, ['Src Port', 'Protocol'], 'SrcPort-Protocol pair')
 
     # x.Timestamp = x.Timestamp.apply(date_to_timestamp, meta=float)
@@ -142,14 +145,62 @@ def process_csv(filepath):
 
     # x = x.astype(dtype=csv_dtypes)
 
+    # NOTE: only do this if using add_pair_frequency
+    # This resolves the "Mismatched divisions" error in train_test_split due to x also being converted to pandas and back to dask
+    partitions = y.npartitions
+    y = dd.from_pandas(y.compute(), npartitions=partitions)
+
+    x.visualize(filename='./images/dask-graph2.png')
+    # dask.visualize(filname='./images/dask-graph.png')
+
+    return x, y
+
+
+def process_parquet(filepath):
+    """Ingest the parquet data and run pre-processing tasks"""
+
+    log.info('Opening {}...'.format(filepath))
+
+    # NOTE: we cannot use dtype & converters so we convert the columns manually later
+    data = dd.read_parquet(filepath, blocksize=config.blocksize, assume_missing=True,
+                           na_values=['  ', '\r\t', '\t', '', 'nan'])
+
+    # x = drop_invalid_rows(data)
+    data = drop_infinity(data)
+    data = drop_nan(data)
+
+    # convert pandas series back into dask dataframe
+    y = process_labels(data.Label)
+
+    # NOTE: comment to use all columns (if memory limitation isn't problematic)
+    x = get_columns(data, best_30)
+
+    x = add_pair_frequency(x, ['Dst Port', 'Protocol'], 'DstPort-protocol pair')
+    # x = add_pair_frequency(x, ['Src Port', 'Protocol'], 'SrcPort-Protocol pair')
+
+    # x.Timestamp = x.Timestamp.apply(date_to_timestamp, meta=float)
+
+    # x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal, meta=int)
+    # x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal, meta=int)
+
+    # x = x.astype(dtype=csv_dtypes)
+
+    # NOTE: only do this if using add_pair_frequency
+    # This resolves the "Mismatched divisions" error in train_test_split due to x also being converted to pandas and back to dask
+    partitions = y.npartitions
+    y = dd.from_pandas(y.compute(), npartitions=partitions)
+
     return x, y
 
 
 def add_pair_frequency(x, pair, column_name):
     # note type: dask.Series
-    x[column_name] = x.groupby(pair)[pair[0]].transform('count', meta=int)
-    # len(x[column_name])
-    # len(x['Dst Port'])
+    partitions = x.npartitions
+    x = x.compute()
+    x[column_name] = x.groupby(pair)[pair[0]].transform('count')
+    # x = dd.from_pandas(x, npartitions=partitions)
+    x = dd.from_pandas(x, npartitions=partitions)
+
     return x
 
 
@@ -260,6 +311,11 @@ def feature_stats(row, netStats):
                                      dstproto,
                                      int(framelen),
                                      float(timestamp))
+
+
+def drop_addresses(x, columns):
+    log.info('Dropping all MAC, IPv4 and IPv6 columns...')
+    x.drop()
 
 
 def process_addresses(x):

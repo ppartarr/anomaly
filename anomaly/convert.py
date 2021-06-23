@@ -94,6 +94,7 @@ dtype = {'ACK Flag Cnt': 'object',
 def convert(args):
     """Converts CSVs to Parquet"""
     if args.csv:
+        log.info('Converting file {f} to parquet'.format(f=args.csv))
         data = dd.read_csv(args.csv, blocksize=config.blocksize, assume_missing=True, dtype=dtype,
                            na_values=['  ', '\r\t', '\t', '', 'nan'])
         data = drop_infinity(data)
@@ -102,6 +103,7 @@ def convert(args):
     elif args.dir:
         files = glob.glob(args.dir + '/' + '*.csv')
         for file in files:
+            log.info('Converting file {f} to parquet'.format(f=file))
             file_name = file.split('/')[-1]
             data = dd.read_csv(file, blocksize=config.blocksize, assume_missing=True, dtype=dtype,
                                na_values=['  ', '\r\t', '\t', '', 'nan'])

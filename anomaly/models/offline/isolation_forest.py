@@ -19,11 +19,13 @@ class IForest:
 
     def __init__(self, x, y, x_train, x_test, y_train, y_test):
         self.x = x.compute() if isinstance(x, dd.DataFrame) else x
-        self.y = y.compute() if isinstance(y, dd.Series) else y
         self.x_train = x_train.compute() if isinstance(x_train, dd.DataFrame) else x_train
         self.x_test = x_test.compute() if isinstance(x_test, dd.DataFrame) else x_test
-        self.y_train = y_train.compute() if isinstance(y_train, dd.Series) else y_train
-        self.y_test = y_test.compute() if isinstance(y_test, dd.Series) else y_test
+
+        if len(y) != 0:
+            self.y = y.compute() if isinstance(y, dd.Series) else y
+            self.y_train = y_train.compute() if isinstance(y_train, dd.Series) else y_train
+            self.y_test = y_test.compute() if isinstance(y_test, dd.Series) else y_test
 
         self.iforest = None
         self.params = None
@@ -38,7 +40,7 @@ class IForest:
         # set params manually if model has not been tuned yet
         if not self.params:
             self.params = {'n_estimators': 80,
-                           'max_features': 20,
+                           'max_features': 30,
                            'contamination': contamination,
                            'n_jobs': n_jobs,
                            'verbose': 1,
