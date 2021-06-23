@@ -10,7 +10,7 @@ from anomaly.readers.socket import SocketReader
 
 
 class NetworkFlowFeatureExtractor:
-    def __init__(self, path, reader, limit=np.inf, encoded=False):
+    def __init__(self, path, reader, limit=np.inf, encoded=False, labelled=False):
         self.path = path
         self.reader = reader(path, limit)
         self.limit = limit

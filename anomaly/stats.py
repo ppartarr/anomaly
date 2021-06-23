@@ -20,6 +20,8 @@ def stats(data_dir_path):
         anom = 0
         rows = 0
         unique_labels = set()
+        FIN_flags = 0
+        RST_flags = 0
 
         chunks = pd.read_csv(file, chunksize=500000)
         for chunk in chunks:
@@ -27,6 +29,9 @@ def stats(data_dir_path):
             benign += chunk['Label'].value_counts()['Benign']
             anom += len(chunk) - chunk['Label'].value_counts()['Benign']
             rows += len(chunk)
+
+            RST_flags += len(chunk[chunk['RST Flag Cnt'] == 1])
+            FIN_flags += len(chunk[chunk['FIN Flag Cnt'] == 1])
 
             total_rows += rows
             total_benign += benign
@@ -41,6 +46,9 @@ def stats(data_dir_path):
             file=file, percentage=100*(anom/(benign + anom))))
         log.info('unique labels: {unique_labels}'.format(unique_labels=unique_labels))
 
+        log.info('number of FIN flags: {f}'.format(f=FIN_flags))
+        log.info('number of RST flags: {r}'.format(r=RST_flags))
+
     log.info('total percentage of malicious flows: {percentage}'.format(
         percentage=100*(total_anom/(total_benign + total_benign))))
 
@@ -52,5 +60,13 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    # logger config
+    log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    handlers=[
+                        log.FileHandler("anomaly.log"),
+                        log.StreamHandler()
+                    ],
+                    level=log.INFO)
     args = parse_args()
     stats(args.dir)

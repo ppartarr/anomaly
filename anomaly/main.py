@@ -227,11 +227,13 @@ def main():
                 if args.model == 'online':
                     for model in model_choice[args.model]:
                         # don't run different models in different threads to avoid messy logging
-                        detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded)
+                        detector = build_online_model(args.model, path, reader,
+                                                      feature_extractor, args.encoded, args.labelled)
                         detector.run()
 
                 else:
-                    detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded)
+                    detector = build_online_model(args.model, path, reader,
+                                                  feature_extractor, args.encoded, args.labelled)
                     thread = threading.Thread(target=detector.run(), name=args.model)
                     thread.start()
                     threads.append(thread)
@@ -244,10 +246,10 @@ def main():
             feature_extractor = get_feature_extractor(args)
             if args.model == 'online':
                 for model in model_choice[args.model]:
-                    detector = build_online_model(model, path, reader, feature_extractor, args.encoded)
+                    detector = build_online_model(model, path, reader, feature_extractor, args.encoded, args.labelled)
                     detector.run()
             else:
-                detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded)
+                detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded, args.labelled)
                 detector.run()
 
     end_time = datetime.now()
@@ -275,7 +277,7 @@ def get_offline_data(args):
     return x, y
 
 
-def build_online_model(model, path, reader, feature_extractor, encoded=False):
+def build_online_model(model, path, reader, feature_extractor, encoded=False, labelled=False):
     log.info(model)
     if model == 'kitsune':
         detector = Kitsune(
@@ -286,7 +288,8 @@ def build_online_model(model, path, reader, feature_extractor, encoded=False):
             max_autoencoder_size=config.auto_encoder['max_autoencoders'],
             feature_mapping_training_samples=config.auto_encoder['feature_mapping_training_samples'],
             anomaly_detector_training_samples=config.auto_encoder['anomaly_detector_training_samples'],
-            encoded=encoded)
+            encoded=encoded,
+            labelled=labelled)
     elif model == 'hstree':
         detector = HSTree(
             path=path,

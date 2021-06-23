@@ -11,11 +11,12 @@ from anomaly.utils import mac_to_decimal, ipv4_to_decimal, ipv6_to_decimal, conv
 
 
 class TCPFeatureExtractor:
-    def __init__(self, path, reader, limit=np.inf, encoded=False):
+    def __init__(self, path, reader, limit=np.inf, encoded=False, labelled=False):
         self.path = path
         self.reader = reader(path, limit)
         self.limit = limit
         self.encoded = encoded
+        self.labelled = labelled
 
         # skip comment & header if reading from netcap audit record csv
         if isinstance(self.reader, SocketReader):

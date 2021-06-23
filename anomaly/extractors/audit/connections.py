@@ -11,11 +11,12 @@ from anomaly.utils import mac_to_decimal, ipv4_to_decimal, ipv6_to_decimal, conv
 
 
 class ConnectionFeatureExtractor:
-    def __init__(self, path, reader, limit=np.inf, encoded=False):
+    def __init__(self, path, reader, limit=np.inf, encoded=False, labelled=False):
         self.path = path
         self.reader = reader(path, limit)
         self.limit = limit
         self.encoded = encoded
+        self.labelled = labelled
 
         # skip comment & header if reading from netcap audit record csv
         if isinstance(self.reader, SocketReader):
@@ -32,7 +33,7 @@ class ConnectionFeatureExtractor:
         if not self.encoded:
             num_features = len(self.connection_statistics.get_net_stat_headers())
         else:
-            num_features = 16
+            num_features = 18
 
         log.info('There are {num_headers} features'.format(num_headers=num_features))
         return num_features
@@ -58,19 +59,26 @@ class ConnectionFeatureExtractor:
             'payload_size': row[12],
             'num_packets': row[13],
             'duration': row[14],
-            'timestamp_end': row[15]
+            'timestamp_end': row[15],
+            'num_client_bytes': row[16],
+            'num_server_bytes': row[17]
         }
+
+        if self.labelled:
+            label = row[18]
+        else:
+            label = None
 
         if not self.encoded:
             # Parse next packet
             try:
                 connection = Connection(**conn)
-                return self.connection_statistics.update_get_stats(connection)
+                return self.connection_statistics.update_get_stats(connection), label
             except Exception as exception:
                 log.error(exception)
                 return []
         else:
-            return np.fromiter(conn.values(), dtype=float)
+            return np.fromiter(conn.values(), dtype=float), label
 
 
 class Connection:
@@ -92,7 +100,9 @@ class Connection:
                  payload_size,
                  num_packets,
                  duration,
-                 timestamp_end):
+                 timestamp_end,
+                 num_client_bytes,
+                 num_server_bytes):
 
         self.timestamp_start = np.int64(timestamp_start)
         self.link_protocol = np.int8(convert_protocol_name_to_number(link_protocol))
@@ -110,6 +120,8 @@ class Connection:
         self.num_packets = np.int32(check_numeric_empty(num_packets))
         self.duration = np.int64(check_numeric_empty(duration))
         self.timestamp_end = np.int64(check_numeric_empty(timestamp_end))
+        self.num_client_bytes = np.int64(check_numeric_empty(num_client_bytes))
+        self.num_server_bytes = np.int64(check_numeric_empty(num_server_bytes))
 
 
 def check_numeric_empty(data):

@@ -10,7 +10,7 @@ import numpy as np
 import logging as log
 import joblib
 
-from anomaly.models.stats import print_stats_labelled, print_stats_unlabelled
+from anomaly.models.stats import print_stats_labelled
 from anomaly.config import n_jobs
 
 

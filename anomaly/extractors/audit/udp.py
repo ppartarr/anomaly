@@ -16,6 +16,7 @@ class UDPFeatureExtractor:
         self.reader = reader(path, limit)
         self.limit = limit
         self.encoded = encoded
+        self.labelled = labelled
 
         # skip comment & header if reading from netcap audit record csv
         if isinstance(self.reader, SocketReader):

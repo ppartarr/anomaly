@@ -31,4 +31,4 @@ model_choice = {
 
 
 def is_model_online(model):
-    return model == 'online' or model_choice[model] in model_choice['online']
+    return model == 'online' or (model in model_choice['online'])

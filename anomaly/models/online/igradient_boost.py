@@ -17,7 +17,7 @@ from xgboost import XGBClassifier
 
 
 class IGBoost:
-    """Incremental Gradient Boosting"""
+    """Dask Incremental Gradient Boosting"""
 
     def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000):
         self.name = 'Incremental GBoost'
@@ -33,7 +33,6 @@ class IGBoost:
             learning_rate=0.15,
             verbosity=3,
             n_jobs=config.n_jobs
-
         )
 
     def proc_next_packet(self):

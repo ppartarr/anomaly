@@ -36,24 +36,40 @@ def process_labels(y):
     # set all malicious labels to -1
     # label names obtained from stats.py
     labels = {
-        'DoS attacks-SlowHTTPTest': 0,
-        'DoS attacks-GoldenEye': 0,
-        'DoS attacks-Hulk': 0,
-        'DoS attacks-Slowloris': 0,
-        'DDOS attack-LOIC-UDP': 0,
-        'DDoS attacks-LOIC-HTTP': 0,
-        'DDOS attack-HOIC': 0,
-        'SSH-Bruteforce': 0,
-        'Brute Force -Web': 0,
-        'Brute Force -XSS': 0,
-        'FTP-BruteForce': 0,
-        'SQL Injection': 0,
-        'Bot': 0,
-        'Infilteration': 0,
-        'Benign': 1
+        'DoS attacks-SlowHTTPTest': 1,
+        'DoS attacks-GoldenEye': 1,
+        'DoS attacks-Hulk': 1,
+        'DoS attacks-Slowloris': 1,
+        'DDOS attack-LOIC-UDP': 1,
+        'DDoS attacks-LOIC-HTTP': 1,
+        'DDOS attack-HOIC': 1,
+        'SSH-Bruteforce': 1,
+        'Brute Force -Web': 1,
+        'Brute Force -XSS': 1,
+        'FTP-BruteForce': 1,
+        'SQL Injection': 1,
+        'Bot': 1,
+        'Infilteration': 1,
+        'Benign': 0
     }
 
     y = y.replace(to_replace=labels)
+    return y
+
+
+def process_netcap_labels(y):
+    """Convert the labels into numerical values"""
+
+    labels = {
+        'bruteforce': 1,
+        'denial-of-service': 1,
+        'injection': 1,
+        'infiltration': 1,
+        'botnet': 1,
+        'normal': 0
+    }
+
+    y = np.array([labels[value] for value in y])
     return y
 
 
