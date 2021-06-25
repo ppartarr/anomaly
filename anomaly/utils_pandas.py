@@ -60,7 +60,6 @@ def process_csv(filepath):
         x = chunk
         x = drop_infinity(x)
         x = drop_nan(x)
-        x = add_pair_frequency_pandas(x, ['Dst Port', 'Protocol'], ['DstPort-Protocol pair'])
         # x = drop_constant_columns(x)
 
         y = process_labels(x.Label)
@@ -71,6 +70,8 @@ def process_csv(filepath):
         # x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal)
         # x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal)
         # x = x.astype(dtype=csv_dtypes)
+
+        x = add_pair_frequency_pandas(x, ['Dst Port', 'Protocol'], ['DstPort-Protocol pair'])
 
         x_list.append(x)
         y_list.append(y)
