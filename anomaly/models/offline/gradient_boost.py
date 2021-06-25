@@ -1,8 +1,9 @@
 #!/home/philippe/src/anomaly/venv/bin/python3
 # coding: utf-8
 
-from dask_ml.xgboost import XGBClassifier
-from dask_ml.metrics import accuracy_score, log_loss
+from sklearn.ensemble import GradientBoostingClassifier
+# from dask_ml.xgboost import XGBClassifier
+# from dask_ml.metrics import accuracy_score, log_loss
 from dask_ml.model_selection import HyperbandSearchCV
 
 import logging as log
@@ -30,17 +31,17 @@ class GBoost:
 
         if not self.params:
             self.params = {'learning_rate': 0.15,
-                           #   'verbose': 1,
-                           'n_estimators': 80,
-                           'num_boost_round': 10
+                           'verbose': 1,
+                           'n_estimators': 80
+                           #    'num_boost_round': 10
                            }
-        self.gboost = XGBClassifier(**self.params)
+        self.gboost = GradientBoostingClassifier(**self.params)
 
         classifier = self.gboost.fit(self.x_train, self.y_train)
         guesses = classifier.predict(self.x_test)
 
-        log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
-        log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
+        # log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
+        # log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
 
         print_stats_labelled(self.y, guesses, self.y_test)
 
@@ -50,7 +51,7 @@ class GBoost:
     def tune(self):
         """ Tune the model by testing various hyperparameters using the GridSearchCV"""
 
-        gboost = XGBClassifier(verbose=1)
+        gboost = GradientBoostingClassifier(verbose=1)
 
         # Best parameters {'learning_rate': 0.15, 'loss': 'deviance', 'n_estimators': 80, 'subsample': 0.8}
         param_grid = [{

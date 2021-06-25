@@ -2,8 +2,8 @@
 # coding: utf-8
 
 from sklearn.ensemble import IsolationForest
-# from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
-from dask_ml.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+# from dask_ml.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, plot_roc_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
