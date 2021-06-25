@@ -61,7 +61,7 @@ def process_csv(filepath):
         x = drop_infinity(x)
         x = drop_nan(x)
         x = add_pair_frequency_pandas(x, ['Dst Port', 'Protocol'], ['DstPort-Protocol pair'])
-        x = drop_constant_columns(x)
+        # x = drop_constant_columns(x)
 
         y = process_labels(x.Label)
         x = get_columns(x, best_30)

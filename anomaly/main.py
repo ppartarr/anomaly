@@ -265,7 +265,12 @@ def get_offline_data(args):
     if args.csv:
         x, y = process_csv(args.csv)
     elif args.csv_dir:
-        x, y = process_csv(args.csv_dir + os.path.sep + '*.csv')
+        out = map(process_csv, glob.glob(args.csv_dir + os.path.sep + '*.csv'))
+        x, y = reduce(lambda x, y: (
+            pd.concat([x[0], y[0]], ignore_index=True),
+            pd.concat([x[1], y[1]], ignore_index=True)
+        ), out)
+        # x, y = process_csv(args.csv_dir + os.path.sep + '*.csv')
     elif args.parquet:
         x, y = process_parquet(args.parquet + os.path.sep + '*.parquet')
     elif args.parquet_dir:
