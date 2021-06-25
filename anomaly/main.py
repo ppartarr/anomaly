@@ -246,10 +246,12 @@ def main():
             feature_extractor = get_feature_extractor(args)
             if args.model == 'online':
                 for model in model_choice[args.model]:
-                    detector = build_online_model(model, path, reader, feature_extractor, args.encoded, args.labelled)
+                    detector = build_online_model(model, path, reader, feature_extractor,
+                                                  args.encoded, args.labelled)
                     detector.run()
             else:
-                detector = build_online_model(args.model, path, reader, feature_extractor, args.encoded, args.labelled)
+                detector = build_online_model(args.model, path, reader, feature_extractor,
+                                              args.encoded, args.labelled)
                 detector.run()
 
     end_time = datetime.now()
@@ -296,14 +298,18 @@ def build_online_model(model, path, reader, feature_extractor, encoded=False, la
             reader=reader,
             limit=config.hstree['packet_limit'],
             feature_extractor=feature_extractor,
-            anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
+            anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'],
+            encoded=encoded,
+            labelled=labelled)
     elif model == 'igboost':
         detector = IGBoost(
             path=path,
             reader=reader,
             limit=config.hstree['packet_limit'],
             feature_extractor=feature_extractor,
-            anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'])
+            anomaly_detector_training_samples=config.hstree['anomaly_detector_training_samples'],
+            encoded=encoded,
+            labelled=labelled)
 
     log.info(detector)
     return detector

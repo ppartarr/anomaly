@@ -7,6 +7,9 @@ import numpy as np
 from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.extractors.audit.connections import ConnectionFeatureExtractor
 from anomaly.models.stats import plot
+from anomaly.models.stats import plot, print_stats_online
+from anomaly.utils import process_netcap_label
+from anomaly.models.stats import plot
 
 import anomaly.config as config
 from scipy.stats import norm
@@ -19,13 +22,14 @@ from xgboost import XGBClassifier
 class IGBoost:
     """Dask Incremental Gradient Boosting"""
 
-    def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000):
+    def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000, encoded=False, labelled=False):
         self.name = 'Incremental GBoost'
         self.path = path
         self.current_packet_index = 0
+        self.labelled = labelled
         self.anomaly_detector_training_samples = anomaly_detector_training_samples
 
-        self.feature_extractor = feature_extractor(path, reader, limit)
+        self.feature_extractor = feature_extractor(path, reader, limit, encoded, labelled)
 
         self.ixgboost = XGBClassifier(
             n_estimators=80,
@@ -36,40 +40,50 @@ class IGBoost:
         )
 
     def proc_next_packet(self):
-        x = self.feature_extractor.get_next_vector()
-        if len(x) == 0:
+        values = self.feature_extractor.get_next_vector()
+        if len(values) == 0:
             return -1  # Error or no packets left
 
-        # log.info(x)
-        # log.info(type)
+        x, y = values
 
-        if self.current_packet_index < self.anomaly_detector_training_samples:
-            # TODO: add labels as y
-            self.ixgboost = self.ixgboost.fit(x, verbose=True, xgb_model=self.ixgboost)
+        if self.current_packet_index < self.anomaly_detector_training_samples and self.labelled:
+            y = process_netcap_label(y)
+            self.ixgboost = self.ixgboost.fit(x, [y], verbose=True, xgb_model=self.ixgboost)
 
-        result = self.ixgboost.predict(x)
+        x = self.ixgboost.predict(x)
+
         # TODO write result to socket?
-
-        return result
+        return x, y
 
     def run(self):
         root_mean_squared_errors = []
+        y_true = []
         i = 0
         while True:
             i += 1
             if i % 1000 == 0:
                 log.info(i)
-            rmse = self.proc_next_packet()
-            if rmse == -1:
+            values = self.proc_next_packet()
+            if values == -1:
                 break
+            rmse, y = values
             root_mean_squared_errors.append(rmse)
+
+            if self.labelled:
+                y_true.append(y)
 
         benign_sample = np.log(
             root_mean_squared_errors[self.anomaly_detector_training_samples+1:100000])
         log_probs = norm.logsf(np.log(root_mean_squared_errors), np.mean(benign_sample), np.std(benign_sample))
 
+        if self.labelled:
+            guesses = list(map(lambda x: 1 if x >= 0.5 else 0, root_mean_squared_errors))
+            print_stats_online(y_true, guesses)
+
+        file_name = './images/{model}-{len}.png'.format(model=self.name, len=len(root_mean_squared_errors))
+
         plot(self.name,
-             './images/igboost.png',
+             file_name,
              root_mean_squared_errors,
              benign_sample,
              log_probs,

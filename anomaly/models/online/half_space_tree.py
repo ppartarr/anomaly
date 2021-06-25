@@ -13,20 +13,19 @@ from matplotlib import cm
 from river import metrics, compose, preprocessing
 from river.anomaly import HalfSpaceTrees
 
-from anomaly.models.stats import plot
-
 
 class HSTree:
     """Half Space Tree (online Isolation Forest variant)
     https://riverml.xyz/latest/api/anomaly/HalfSpaceTrees/"""
 
-    def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000):
+    def __init__(self, path, reader, limit, feature_extractor, anomaly_detector_training_samples=10000, encoded=False, labelled=False):
         self.name = 'Half Space Tree'
         self.path = path
         self.current_packet_index = 0
+        self.labelled = labelled
         self.anomaly_detector_training_samples = anomaly_detector_training_samples
 
-        self.feature_extractor = feature_extractor(path, reader, limit)
+        self.feature_extractor = feature_extractor(path, reader, limit, encoded, labelled)
 
         self.rocauc = metrics.ROCAUC()
 
@@ -39,42 +38,51 @@ class HSTree:
         )
 
     def proc_next_packet(self):
-        x = self.feature_extractor.get_next_vector()
-        if len(x) == 0:
+        values = self.feature_extractor.get_next_vector()
+        if len(values) == 0:
             return -1  # Error or no packets left
 
-        # log.info(x)
-        # log.info(type)
+        x, y = values
 
-        if self.current_packet_index < self.anomaly_detector_training_samples:
+        if self.current_packet_index < self.anomaly_detector_training_samples and self.labelled:
             # convert np array to dict for river api...
-            self.hstree = self.hstree.learn_one(dict(enumerate(x.flatten(), 1)))
+            y = process_netcap_label(y)
+            self.hstree = self.hstree.learn_one(x=dict(enumerate(x.flatten(), 1)), y=y)
 
-        result = self.hstree.score_one(dict(enumerate(x.flatten(), 1)))
-        # TODO write result to socket?
+        x = self.hstree.score_one(dict(enumerate(x.flatten(), 1)))
 
-        return result
+        # TODO write result to socket
+        return x, y
 
     def run(self):
         root_mean_squared_errors = []
+        y_true = []
         i = 0
         while True:
             i += 1
             if i % 1000 == 0:
                 log.info(i)
-            rmse = self.proc_next_packet()
-            if rmse == -1:
+            values = self.proc_next_packet()
+            if values == -1:
                 break
+            rmse, y = values
             root_mean_squared_errors.append(rmse)
 
-        log.info(self.rocauc)
+            if self.labelled:
+                y_true.append(y)
 
         benign_sample = np.log(
             root_mean_squared_errors[self.anomaly_detector_training_samples+1:100000])
         log_probs = norm.logsf(np.log(root_mean_squared_errors), np.mean(benign_sample), np.std(benign_sample))
 
+        if self.labelled:
+            guesses = list(map(lambda x: 1 if x >= 0.5 else 0, root_mean_squared_errors))
+            print_stats_online(y_true, guesses)
+
+        file_name = './images/{model}-{len}.png'.format(model=self.name, len=len(root_mean_squared_errors))
+
         plot(self.name,
-             './images/hstree.png',
+             file_name,
              root_mean_squared_errors,
              benign_sample,
              log_probs,

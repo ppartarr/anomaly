@@ -5,7 +5,7 @@ from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.extractors.audit.connections import ConnectionFeatureExtractor
 from anomaly.models.online.kitnet.kitnet import KitNET
 from anomaly.models.stats import plot, print_stats_online
-from anomaly.utils import process_netcap_labels
+from anomaly.utils import process_netcap_label
 import logging as log
 import numpy as np
 from scipy.stats import norm
@@ -44,8 +44,11 @@ class Kitsune:
         x, y = values
 
         # process KitNET
-        result = self.anomaly_detector.process(x)
-        return result, y  # will train during the grace periods, then execute on all the rest.
+        x = self.anomaly_detector.process(x)
+
+        if self.labelled:
+            y = process_netcap_label(y)
+        return x, y  # will train during the grace periods, then execute on all the rest.
 
     def run(self):
         root_mean_squared_errors = []
@@ -67,14 +70,15 @@ class Kitsune:
         benign_sample = np.log(
             root_mean_squared_errors[self.feature_mapping_training_samples+self.anomaly_detector_training_samples+1:])
         log_probs = norm.logsf(np.log(root_mean_squared_errors), np.mean(benign_sample), np.std(benign_sample))
-        guesses = list(map(lambda x: 1 if x >= 0.5 else 0, root_mean_squared_errors))
 
-        # convert string labels to int
-        y_true = process_netcap_labels(y_true)
-        print_stats_online(y_true, guesses)
+        if self.labelled:
+            guesses = list(map(lambda x: 1 if x >= 0.5 else 0, root_mean_squared_errors))
+            print_stats_online(y_true, guesses)
+
+        file_name = './images/{model}-{len}.png'.format(model=self.name, len=len(root_mean_squared_errors))
 
         plot(self.name,
-             './images/kitsune.png',
+             file_name,
              root_mean_squared_errors,
              benign_sample,
              log_probs,

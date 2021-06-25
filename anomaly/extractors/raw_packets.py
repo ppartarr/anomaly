@@ -33,11 +33,14 @@ class RawPacketFeatureExtractor:
     If wireshark is installed (tshark) it is used to parse (it's faster), otherwise, scapy is used (much slower).
     If wireshark is used then a tsv file (parsed version of the pcap) will be made -which you can use as your input next time"""
 
-    def __init__(self, path, reader, limit=np.inf, encoded=None):
+    def __init__(self, path, reader, limit=np.inf, encoded=None, labelled=False):
         self.path = path
         self.reader = reader(path, limit)
         self.limit = limit
         self.parse_type = None  # unknown
+
+        if labelled:
+            raise Exception('Cannot read labelled PCAPs...')
 
         # Prep Feature extractor (AfterImage)
         maxHost = 100000000000
@@ -141,7 +144,7 @@ class RawPacketFeatureExtractor:
         try:
             return self.network_statistics.update_get_stats(IPtype, srcMAC, dstMAC, srcIP, srcproto, dstIP, dstproto,
                                                             int(framelen),
-                                                            float(timestamp))
+                                                            float(timestamp)), None
         except Exception as e:
             log.info(e)
             return []

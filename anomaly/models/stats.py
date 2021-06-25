@@ -33,13 +33,41 @@ def print_stats_labelled(y, guesses, y_true):
     f1 = f1_score(y_true=y_true, y_pred=guesses, average='micro')
     log.info('f1 score: {f1}'.format(f1=f1))
 
+    y_true = y_true.to_numpy()
+
+    true_positives = np.count_nonzero((guesses == y_true) == True)
+    true_negatives = np.count_nonzero((guesses == y_true) == False)
+    false_positives = count_false_positives(guesses, y_true)
+    false_negatives = count_false_negatives(guesses, y_true)
+    log.info('true positives {tp}'.format(tp=true_positives))
+    log.info('true negatives {tn}'.format(tn=true_negatives))
+    log.info('false positives {fp}'.format(fp=false_positives))
+    log.info('false negatives {fn}'.format(fn=false_negatives))
+
+
+def count_false_positives(guesses, y_true):
+    fp = 0
+    for index, _ in np.ndenumerate(guesses):
+        if guesses[index[0]] == 1 and (y_true[index[0]] == -1 or y_true[index[0]] == 0):
+            fp += 1
+    return fp
+
+
+def count_false_negatives(guesses, y_true):
+    fn = 0
+    for index, _ in np.ndenumerate(guesses):
+        if (guesses[index[0]] == -1 or guesses[index[0]] == 0) and y_true[index[0]] == 1:
+            fn += 1
+    return fn
+
 
 def print_stats_online(y_true, guesses):
     """Statistics for online models"""
     y_true = np.array(y_true)
     guesses = np.array(guesses)
+    num_anoms = np.count_nonzero(guesses == 1)
     log.info('guess percentage of anomalies: {percentage:.2f}'.format(
-        percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
+        percentage=(num_anoms / len(guesses))))
 
     # ROC AUC score is not defined if there is only one class in y_true
     if 0 in y_true and 1 in y_true:
@@ -49,22 +77,24 @@ def print_stats_online(y_true, guesses):
     f1 = f1_score(y_true=y_true, y_pred=guesses, average='micro')
     log.info('f1 score: {f1}'.format(f1=f1))
 
+    log.info(len(guesses))
+    log.info(guesses)
+    log.info(len(y_true))
+    log.info(y_true)
+
+    true_positives = np.count_nonzero((guesses == y_true) == True)
+    true_negatives = np.count_nonzero((guesses == y_true) == False)
+    false_positives = count_false_positives(guesses, y_true)
+    false_negatives = count_false_negatives(guesses, y_true)
+    log.info('true positives {tp}'.format(tp=true_positives))
+    log.info('true negatives {tn}'.format(tn=true_negatives))
+    log.info('false positives {fp}'.format(fp=false_positives))
+    log.info('false negatives {fn}'.format(fn=false_negatives))
+
 
 def plot(model, file_name, root_mean_squared_errors, benign_sample, log_probs, anomaly_detector_training_samples, feature_mapping_training_samples=0):
     # plot the RMSE anomaly scores
     log.info("Plotting results")
-
-    # log.info(log_probs)
-    # log.info(benign_sample)
-    # log.info(len(root_mean_squared_errors))
-    # log.info(root_mean_squared_errors)
-
-    # anoms = np.where(root_mean_squared_errors > 0.5, root_mean_squared_errors)
-    anoms = [x for x in root_mean_squared_errors if x >= 0.5]
-
-    # log.info(anoms)
-    log.info('guess percentage of anomalies: {percentage:.2f}'.format(
-        percentage=(len(anoms) / len(root_mean_squared_errors))))
 
     plt.figure(figsize=(10, 5))
     fig = plt.scatter(
@@ -81,6 +111,6 @@ def plot(model, file_name, root_mean_squared_errors, benign_sample, log_probs, a
     plt.xlabel("Packet number")
     figbar = plt.colorbar()
     figbar.ax.set_ylabel('Log Probability\n ', rotation=270)
-    plt.show()
     plt.savefig(file_name)
     log.info('Saved plot as {plt}'.format(plt=file_name))
+    plt.show()
