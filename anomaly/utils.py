@@ -9,13 +9,14 @@ from pandas.api.types import is_numeric_dtype, is_string_dtype
 
 from anomaly.columns import csv_dtypes, pcap_dtypes, best_30, tsv_columns
 from anomaly.models.online.kitnet.stats.network import NetworkStatistics
+from anomaly.models.online.kitnet.stats.connection import ConnectionStatistics
 import anomaly.config as config
+from anomaly.extractors.protocols import convert_protocol_name_to_number
 
 from ipaddress import IPv4Address, IPv6Address, ip_address
 
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
 import argparse
 import matplotlib.pyplot as plt
 import os
@@ -23,54 +24,30 @@ import subprocess
 import csv
 import sys
 import logging as log
+
+import dask.dataframe as dd
 import dask
 
-log = log.getLogger(__name__)
 
-
-def process_labels(y):
+def process_netcap_label(y):
     """Convert the labels into numerical values"""
 
-    log.info('Processing labels...')
-
-    # set all malicious labels to -1
-    # label names obtained from stats.py
-    labels = {
-        'DoS attacks-SlowHTTPTest': 1,
-        'DoS attacks-GoldenEye': 1,
-        'DoS attacks-Hulk': 1,
-        'DoS attacks-Slowloris': 1,
-        'DDOS attack-LOIC-UDP': 1,
-        'DDoS attacks-LOIC-HTTP': 1,
-        'DDOS attack-HOIC': 1,
-        'SSH-Bruteforce': 1,
-        'Brute Force -Web': 1,
-        'Brute Force -XSS': 1,
-        'FTP-BruteForce': 1,
-        'SQL Injection': 1,
-        'Bot': 1,
-        'Infilteration': 1,
-        'Benign': 0
+    malicious = {
+        'bruteforce',
+        'denial-of-service',
+        'injection',
+        'infiltration',
+        'botnet',
+        'normal'
     }
 
-    y = y.replace(to_replace=labels)
-    return y
-
-
-def process_netcap_labels(y):
-    """Convert the labels into numerical values"""
-
-    labels = {
-        'bruteforce': 1,
-        'denial-of-service': 1,
-        'injection': 1,
-        'infiltration': 1,
-        'botnet': 1,
-        'normal': 0
-    }
-
-    y = np.array([labels[value] for value in y])
-    return y
+    if y in malicious:
+        return 1
+    elif y == 'normal':
+        return 0
+    else:
+        log.error("netcap label doesn't exist")
+        return -1
 
 
 def drop_infinity(x):
@@ -125,101 +102,6 @@ def drop_constant_columns(x):
     return x
 
 
-def drop_invalid_rows(x):
-    """The CIC 2018 dataset network flow data has invalid rows which are a duplicate of the csv headers - drop them!"""
-    return x[x.Timestamp != 'Timestamp']
-
-
-def process_csv(filepath):
-    """Ingest the raw csv data and run pre-processing tasks"""
-
-    log.info('Opening {}...'.format(filepath))
-
-    # NOTE: we cannot use dtype & converters so we convert the columns manually later
-    data = dd.read_csv(filepath, blocksize=config.blocksize, assume_missing=True,
-                       na_values=['  ', '\r\t', '\t', '', 'nan'])
-
-    # x = drop_invalid_rows(data)
-    data = drop_infinity(data)
-    data = drop_nan(data)
-
-    # convert pandas series back into dask dataframe
-    y = process_labels(data.Label)
-
-    # NOTE: comment to use all columns (if memory limitation isn't problematic)
-    x = get_columns(data, best_30)
-
-    # x.visualize(filename='./images/dask-graph1.png')
-
-    x = add_pair_frequency(x, ['Dst Port', 'Protocol'], 'DstPort-protocol pair')
-    # x = add_pair_frequency(x, ['Src Port', 'Protocol'], 'SrcPort-Protocol pair')
-
-    # x.Timestamp = x.Timestamp.apply(date_to_timestamp, meta=float)
-
-    # x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal, meta=int)
-    # x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal, meta=int)
-
-    # x = x.astype(dtype=csv_dtypes)
-
-    # NOTE: only do this if using add_pair_frequency
-    # This resolves the "Mismatched divisions" error in train_test_split due to x also being converted to pandas and back to dask
-    partitions = y.npartitions
-    y = dd.from_pandas(y.compute(), npartitions=partitions)
-
-    x.visualize(filename='./images/dask-graph2.png')
-    # dask.visualize(filname='./images/dask-graph.png')
-
-    return x, y
-
-
-def process_parquet(filepath):
-    """Ingest the parquet data and run pre-processing tasks"""
-
-    log.info('Opening {}...'.format(filepath))
-
-    # NOTE: we cannot use dtype & converters so we convert the columns manually later
-    data = dd.read_parquet(filepath, blocksize=config.blocksize, assume_missing=True,
-                           na_values=['  ', '\r\t', '\t', '', 'nan'])
-
-    # x = drop_invalid_rows(data)
-    data = drop_infinity(data)
-    data = drop_nan(data)
-
-    # convert pandas series back into dask dataframe
-    y = process_labels(data.Label)
-
-    # NOTE: comment to use all columns (if memory limitation isn't problematic)
-    x = get_columns(data, best_30)
-
-    x = add_pair_frequency(x, ['Dst Port', 'Protocol'], 'DstPort-protocol pair')
-    # x = add_pair_frequency(x, ['Src Port', 'Protocol'], 'SrcPort-Protocol pair')
-
-    # x.Timestamp = x.Timestamp.apply(date_to_timestamp, meta=float)
-
-    # x['Src IP'] = x['Src IP'].apply(convert_ip_address_to_decimal, meta=int)
-    # x['Dst IP'] = x['Dst IP'].apply(convert_ip_address_to_decimal, meta=int)
-
-    # x = x.astype(dtype=csv_dtypes)
-
-    # NOTE: only do this if using add_pair_frequency
-    # This resolves the "Mismatched divisions" error in train_test_split due to x also being converted to pandas and back to dask
-    partitions = y.npartitions
-    y = dd.from_pandas(y.compute(), npartitions=partitions)
-
-    return x, y
-
-
-def add_pair_frequency(x, pair, column_name):
-    # note type: dask.Series
-    partitions = x.npartitions
-    x = x.compute()
-    x[column_name] = x.groupby(pair)[pair[0]].transform('count')
-    # x = dd.from_pandas(x, npartitions=partitions)
-    x = dd.from_pandas(x, npartitions=partitions)
-
-    return x
-
-
 def get_columns(x, columns):
     """Note: This also drops the Label & Flow ID columns"""
     columns_to_drop = []
@@ -231,46 +113,76 @@ def get_columns(x, columns):
     return x
 
 
-def process_pcap(filepath):
-    """Ingest the raw pcap data and run pre-processing tasks"""
-
+def process_csv_kitsune(filepath):
+    """Ingest the raw csv data and run pre-processing tasks"""
     log.info('Opening {}...'.format(filepath))
 
-    # find file
-    if not os.path.isfile(filepath):
-        log.info('File {file} does not exist'.format(file=filepath))
-        raise Exception()
+    maxHost = 1000000
+    maxSess = 1000000
+    connStats = ConnectionStatistics(np.nan, maxHost, maxSess)
 
-    filetype = filepath.split('.')[-1]
-    tshark = get_tshark_path()
+    # NOTE: we cannot use dtype & converters so we convert the columns manually later
+    chunks = pd.read_csv(filepath, chunksize=config.chunksize, na_values=['  ', '\r\t', '\t', '', 'nan'])
 
-    # convert pcap to tsv if necessary
-    if filetype == "pcap" or filetype == 'pcapng' or filetype == "tsv":
-        tshark_filepath = filepath + ".tsv"
+    x_list = []
+    y_list = []
 
-        # try parsing via tshark dll of wireshark
-        if os.path.isfile(tshark) and not os.path.exists(tshark_filepath):
-            pcap2tsv_with_tshark(tshark, filepath)  # creates local tsv file
-    else:
-        log.error('File {filepath} is not a tsv or pcap file'.format(filepath=filepath))
-        raise Exception()
+    for chunk in chunks:
 
-    # NOTE don't use dtypes for pcaps
-    data = dd.read_table(tshark_filepath, blocksize=config.blocksize,
-                         assume_missing=True, na_values=['  ', '\r\t', '\t', '', 'nan'])
+        x = chunk
+        x = drop_infinity(x)
+        x = drop_nan(x)
+        # x = x.astype(dtype=csv_dtypes)
 
-    x = replace_nan(data)
-    x = process_addresses(x)
+        values = chunk.apply(lambda row: connection_stats(row, connStats), axis=1)
 
-    # drop timestamp and address columns
-    x = get_columns(x, tsv_columns)
+        # log.info('VALUES')
+        # log.info(values)
+        x, y = values
 
-    # x = x.astype(dtype=pcap_dtypes)
+        y = process_labels(y)
 
-    # NOTE: comment out to disable additional statistical features from Kitsune
-    # x = feature_engineering(x)
+        x_list.append(x)
+        y_list.append(y)
 
-    return x
+    return pd.concat(x_list), pd.concat(y_list)
+
+
+def connection_stats(row, connStats):
+    conn = {
+        'timestamp_start': row[0],
+        'link_protocol': row[1],
+        'network_protocol': row[2],
+        'transport_protocol': row[3],
+        'application_protocol': row[4],
+        'srcMAC': row[5],
+        'dstMAC': row[6],
+        'srcIP': row[7],
+        'src_port': row[8],
+        'dstIP': row[9],
+        'dst_port': row[10],
+        'total_size': row[11],
+        'payload_size': row[12],
+        'num_packets': row[13],
+        'duration': row[14],
+        'timestamp_end': row[15],
+        'num_client_bytes': row[16],
+        'num_server_bytes': row[17]
+    }
+
+    label = row[18]
+
+    # Parse next packet
+    try:
+        connection = Connection(**conn)
+        log.info(connStats.update_get_stats(connection))
+        log.info(label)
+        return connStats.update_get_stats(connection), label
+    except Exception as exception:
+        log.error(exception)
+        return []
+
+    return connStats.update_get_stats(connection), label
 
 
 def feature_engineering(x):
@@ -279,7 +191,7 @@ def feature_engineering(x):
     maxSess = 255
     netStats = NetworkStatistics(np.nan, maxHost, maxSess)
 
-    x.compute().apply(lambda row: feature_stats(row, netStats))
+    x.compute().apply(lambda row: feature_stats(row, connection_stats))
 
     return x
 
@@ -402,3 +314,54 @@ def convert_ip_address_to_decimal(ip_addr):
             return ipv6_to_decimal(ip_addr)
         else:
             log.error('Cannot convert ip address {ip_addr} to decimal'.format(ip_addr=ip_addr))
+
+
+class Connection:
+    """Represents a netcap connection from an audit record"""
+
+    def __init__(self,
+                 timestamp_start,
+                 link_protocol,
+                 network_protocol,
+                 transport_protocol,
+                 application_protocol,
+                 srcMAC,
+                 dstMAC,
+                 srcIP,
+                 src_port,
+                 dstIP,
+                 dst_port,
+                 total_size,
+                 payload_size,
+                 num_packets,
+                 duration,
+                 timestamp_end,
+                 num_client_bytes,
+                 num_server_bytes):
+
+        self.timestamp_start = np.int64(timestamp_start)
+        self.link_protocol = np.int8(convert_protocol_name_to_number(link_protocol))
+        self.network_protocol = np.int8(convert_protocol_name_to_number(network_protocol))
+        self.transport_protocol = np.int8(convert_protocol_name_to_number(transport_protocol))
+        self.application_protocol = np.int8(convert_protocol_name_to_number(application_protocol))
+        self.srcMAC = np.int64(mac_to_decimal(check_numeric_empty(srcMAC)))
+        self.dstMAC = np.int64(mac_to_decimal(check_numeric_empty(dstMAC)))
+        self.srcIP = int(convert_ip_address_to_decimal(check_numeric_empty(srcIP)))
+        self.src_port = np.int8(check_numeric_empty(src_port))
+        self.dstIP = int(convert_ip_address_to_decimal(check_numeric_empty(dstIP)))
+        self.dst_port = np.int8(check_numeric_empty(dst_port))
+        self.total_size = np.int32(check_numeric_empty(total_size))
+        self.payload_size = np.int32(check_numeric_empty(payload_size))
+        self.num_packets = np.int32(check_numeric_empty(num_packets))
+        self.duration = np.int64(check_numeric_empty(duration))
+        self.timestamp_end = np.int64(check_numeric_empty(timestamp_end))
+        self.num_client_bytes = np.int64(check_numeric_empty(num_client_bytes))
+        self.num_server_bytes = np.int64(check_numeric_empty(num_server_bytes))
+
+
+def check_numeric_empty(data):
+    """Checks if a numeric audit record parsed value is empty, return -1 if it is"""
+    if data == '':
+        return -1
+    else:
+        return data

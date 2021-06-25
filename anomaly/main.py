@@ -56,7 +56,8 @@ from anomaly.readers.csv import CSVReader
 from anomaly.readers.pcap import PCAPReader
 from anomaly.readers.tsv import TSVReader, get_tshark_path, pcap2tsv_with_tshark
 from anomaly.readers.socket import SocketReader
-from anomaly.utils import process_csv, process_pcap, process_parquet
+from anomaly.utils_dask import process_pcap, process_parquet
+from anomaly.utils_pandas import process_csv
 from anomaly.audit_records import audit_records
 from anomaly.models.stats import find_best_features
 
@@ -196,11 +197,13 @@ def main():
     if not is_model_online(args.model):
 
         # start dask dashboard
-        client = Client(n_workers=config.n_workers,
-                        threads_per_worker=config.threads_per_worker,
-                        processes=True,
-                        memory_limit=config.memory_limit)
-        log.info('connect to the dask dashboard at {url}'.format(url='http://localhost:8787/status'))
+        # client = Client(n_workers=config.n_workers,
+        #                 threads_per_worker=config.threads_per_worker,
+        #                 processes=False,
+        #                 memory_limit=config.memory_limit,
+        #                 dashboard_address=':8788')
+        # # address='127.0.0.1:8788')
+        # log.info('connect to the dask dashboard at {url}'.format(url='http://127.0.0.1:8788/status'))
 
         x, y = get_offline_data(args)
 

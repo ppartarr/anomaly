@@ -6,6 +6,8 @@ __all__ = [
     'columns',
     'config',
     'utils',
+    'utils_dask',
+    'utils_pandas',
     'audit_records',
     'convert'
 ]

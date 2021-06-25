@@ -117,7 +117,7 @@ best_30 = [
     # 'Flow ID',
     # 'Src IP',
     # 'Dst IP',
-    'Src Port',
+    # 'Src Port',
     'Dst Port',
     'Protocol',
     'Flow Duration',

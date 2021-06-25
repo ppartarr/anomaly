@@ -61,4 +61,4 @@ class IPProfileFeatureExtractor:
         #         log.error(exception)
         #         return []
         # else:
-        return np.fromiter(ipprofile.values(), dtype=float)
+        return np.fromiter(ipprofile.values(), dtype=float), None

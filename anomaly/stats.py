@@ -54,7 +54,7 @@ def stats(data_dir_path):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Anomanly-based Network Intrusion Detection')
+    parser = argparse.ArgumentParser(description='Anomaly-based Network Intrusion Detection')
     parser.add_argument('--dir', default='/data', help='directory containing the network flow csvs', required=True)
     return parser.parse_args()
 

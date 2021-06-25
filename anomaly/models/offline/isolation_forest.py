@@ -48,8 +48,8 @@ class IForest:
 
         self.iforest = IsolationForest(**self.params)
 
-        with joblib.parallel_backend('dask'):
-            classifier = self.iforest.fit(self.x_train)
+        # with joblib.parallel_backend('dask'):
+        classifier = self.iforest.fit(self.x_train)
 
         guesses = classifier.predict(self.x_test)
 
