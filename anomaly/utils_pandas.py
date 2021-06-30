@@ -7,6 +7,37 @@ from anomaly.utils import convert_ip_address_to_decimal, date_to_timestamp, drop
 from anomaly.columns import best_30
 
 
+def process_label(y):
+    """Convert a label into a numerical values"""
+
+    # set all malicious labels to -1
+    # label names obtained from stats.py
+    malicious = {
+        'DoS attacks-SlowHTTPTest': -1,
+        'DoS attacks-GoldenEye': -1,
+        'DoS attacks-Hulk': -1,
+        'DoS attacks-Slowloris': -1,
+        'DDOS attack-LOIC-UDP': -1,
+        'DDoS attacks-LOIC-HTTP': -1,
+        'DDOS attack-HOIC': -1,
+        'SSH-Bruteforce': -1,
+        'Brute Force -Web': -1,
+        'Brute Force -XSS': -1,
+        'FTP-BruteForce': -1,
+        'SQL Injection': -1,
+        'Bot': -1,
+        'Infilteration': -1
+    }
+
+    if y in malicious:
+        return -1
+    elif y == 'Benign':
+        return 1
+    else:
+        log.error('network flow label does not exist: {l}'.format(l=y))
+        return 0
+
+
 def process_labels(y):
     """Convert the labels into numerical values"""
 

@@ -15,6 +15,7 @@ class NetworkFlowFeatureExtractor:
         self.reader = reader(path, limit)
         self.limit = limit
         self.encoded = encoded
+        self.labelled = labelled
 
         # skip comment & header if reading from netcap audit record csv
         if isinstance(self.reader, SocketReader):
@@ -121,7 +122,11 @@ class NetworkFlowFeatureExtractor:
             'Idle Std': row[80],
             'Idle Max': row[81],
             'Idle Min': row[82]
-            # 'Label': row[83]
         }
 
-        return np.fromiter(network_flow.values(), dtype=float)
+        if self.labelled:
+            label = row[83]
+        else:
+            label = None
+
+        return np.fromiter(network_flow.values(), dtype=float), label

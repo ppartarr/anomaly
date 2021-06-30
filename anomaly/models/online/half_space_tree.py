@@ -6,8 +6,10 @@ import numpy as np
 
 from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.extractors.audit.connections import ConnectionFeatureExtractor
+from anomaly.extractors.network_flow import NetworkFlowFeatureExtractor
 from anomaly.models.stats import plot, print_stats_online
 from anomaly.utils import process_netcap_label
+from anomaly.utils_pandas import process_label
 from anomaly.models.stats import plot
 
 from scipy.stats import norm
@@ -50,7 +52,10 @@ class HSTree:
 
         if self.current_packet_index < self.anomaly_detector_training_samples and self.labelled:
             # convert np array to dict for river api...
-            y = process_netcap_label(y)
+            if isinstance(self.feature_extractor, ConnectionFeatureExtractor):
+                y = process_netcap_label(y)
+            elif isinstance(self.feature_extractor, NetworkFlowFeatureExtractor):
+                y = process_label(y)
             self.hstree = self.hstree.learn_one(x=dict(enumerate(x.flatten(), 1)), y=y)
 
         x = self.hstree.score_one(dict(enumerate(x.flatten(), 1)))
