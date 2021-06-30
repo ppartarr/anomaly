@@ -1,7 +1,7 @@
 #!/home/philippe/src/anomaly/venv/bin/python3
 # coding: utf-8
 from sklearn.feature_selection import SelectKBest
-from sklearn.metrics import roc_auc_score, f1_score
+from sklearn.metrics import roc_auc_score, f1_score, confusion_matrix
 import logging as log
 import numpy as np
 from scipy.stats import norm
@@ -11,7 +11,7 @@ from matplotlib import cm
 
 
 def find_best_features(x, x_train, y_train):
-    select = SelectKBest(k=30)
+    select = SelectKBest(k=40)
     selected_features = select.fit(x_train, y_train)
     indices_selected = selected_features.get_support(indices=True)
     col_names_selected = [x.columns[i] for i in indices_selected]
@@ -23,7 +23,7 @@ def print_stats_labelled(y, guesses, y_true):
     log.info('guess percentage of anomalies: {percentage:.2f}'.format(
         percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
     log.info('actual percentage of anomalies: {percentage:.2f}'.format(
-        percentage=(100 - (100 * (y.value_counts()[1])) / len(y))))
+        percentage=(100 - (100 * (y_true.value_counts()[1])) / len(y_true))))
 
     # ROC AUC score is not defined if there is only one class in y_true
     if len(y_true.value_counts()) > 1:
@@ -35,14 +35,12 @@ def print_stats_labelled(y, guesses, y_true):
 
     y_true = y_true.to_numpy()
 
-    true_positives = np.count_nonzero((guesses == y_true) == True)
-    true_negatives = np.count_nonzero((guesses == y_true) == False)
-    false_positives = count_false_positives(guesses, y_true)
-    false_negatives = count_false_negatives(guesses, y_true)
-    log.info('true positives {tp}'.format(tp=true_positives))
-    log.info('true negatives {tn}'.format(tn=true_negatives))
-    log.info('false positives {fp}'.format(fp=false_positives))
-    log.info('false negatives {fn}'.format(fn=false_negatives))
+    cm = confusion_matrix(y_true, guesses)
+
+    log.info('true positives {tp}'.format(tp=cm[1][1]))
+    log.info('true negatives {tn}'.format(tn=cm[0][0]))
+    log.info('false positives {fp}'.format(fp=cm[0][1]))
+    log.info('false negatives {fn}'.format(fn=cm[1][0]))
 
 
 def count_false_positives(guesses, y_true):
@@ -82,14 +80,12 @@ def print_stats_online(y_true, guesses):
     log.info(len(y_true))
     log.info(y_true)
 
-    true_positives = np.count_nonzero((guesses == y_true) == True)
-    true_negatives = np.count_nonzero((guesses == y_true) == False)
-    false_positives = count_false_positives(guesses, y_true)
-    false_negatives = count_false_negatives(guesses, y_true)
-    log.info('true positives {tp}'.format(tp=true_positives))
-    log.info('true negatives {tn}'.format(tn=true_negatives))
-    log.info('false positives {fp}'.format(fp=false_positives))
-    log.info('false negatives {fn}'.format(fn=false_negatives))
+    cm = confusion_matrix(y_true, guesses)
+
+    log.info('true positives {tp}'.format(tp=cm[1][1]))
+    log.info('true negatives {tn}'.format(tn=cm[0][0]))
+    log.info('false positives {fp}'.format(fp=cm[0][1]))
+    log.info('false negatives {fn}'.format(fn=cm[1][0]))
 
 
 def plot(model, file_name, root_mean_squared_errors, benign_sample, log_probs, anomaly_detector_training_samples, feature_mapping_training_samples=0):
