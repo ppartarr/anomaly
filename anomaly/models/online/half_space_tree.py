@@ -3,6 +3,7 @@
 
 import logging as log
 import numpy as np
+import os
 
 from anomaly.extractors.raw_packets import RawPacketFeatureExtractor
 from anomaly.extractors.audit.connections import ConnectionFeatureExtractor
@@ -88,7 +89,12 @@ class HSTree:
             guesses = list(map(lambda x: 1 if x >= 0.5 else 0, root_mean_squared_errors))
             print_stats_online(y_true, guesses)
 
-        file_name = './images/{model}-{len}.png'.format(model=self.name, len=len(root_mean_squared_errors))
+        basename = os.path.basename(self.path)
+
+        file_name = './images/{model}-{basename}-{len}.png'.format(
+            model=self.name,
+            basename=basename,
+            len=len(root_mean_squared_errors))
 
         plot(self.name,
              file_name,
