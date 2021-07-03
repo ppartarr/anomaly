@@ -72,12 +72,12 @@ def process_netcap_labels(y, _):
     """Convert the labels into numerical values"""
 
     malicious = {
-        'bruteforce': 1,
-        'denial-of-service': 1,
-        'injection': 1,
-        'infiltration': 1,
-        'botnet': 1,
-        'normal': 0
+        'bruteforce': -1,
+        'denial-of-service': -1,
+        'injection': -1,
+        'infiltration': -1,
+        'botnet': -1,
+        'normal': 1
     }
 
     y = y.replace(to_replace=malicious, inplace=True)
