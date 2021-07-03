@@ -171,7 +171,7 @@ def encode_numeric_zscore(df, name, mean=None, sd=None):
     """
     # replace missing values (NaN) with a 0
     df[name].fillna(0, inplace=True)
-    log.info("encode_numeric_zscore {name}".format(name=name))
+    # log.info("encode_numeric_zscore {name}".format(name=name))
     if mean is None:
         mean = df[name].mean()
 
@@ -188,7 +188,7 @@ def encode_string(df, name):
     """
     # replace missing values (NaN) with an empty string
     df[name].fillna('', inplace=True)
-    log.info("encode_string {name}".format(name=name))
+    # log.info("encode_string {name}".format(name=name))
     le = LabelEncoder()
     # explicitly type cast to string
     # to avoid any numbers that slipped in to break the code by simply treating them as strings
