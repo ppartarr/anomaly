@@ -154,9 +154,6 @@ def process_connection_csv(filepath):
         x_list.append(x)
         y_list.append(y)
 
-    log.info(x)
-    log.info(y)
-
     return pd.concat(x_list), pd.concat(y_list)
 
 

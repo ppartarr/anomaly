@@ -37,10 +37,15 @@ class IForest:
         contamination = 1 - ((self.y.value_counts()[1]) / len(self.y))
         log.info('contamination rate: {contam:0.2f}%'.format(contam=100*contamination))
 
+        if len(self.x_train.columns) < 30:
+            max_features = len(self.x_train.columns)
+        else:
+            max_features = 30
+
         # set params manually if model has not been tuned yet
         if not self.params:
             self.params = {'n_estimators': 80,
-                           'max_features': 30,
+                           'max_features': max_features,
                            'contamination': contamination,
                            'n_jobs': n_jobs,
                            'verbose': 1,
