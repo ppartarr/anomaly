@@ -57,7 +57,7 @@ from anomaly.readers.pcap import PCAPReader
 from anomaly.readers.tsv import TSVReader, get_tshark_path, pcap2tsv_with_tshark
 from anomaly.readers.socket import SocketReader
 from anomaly.utils_dask import process_pcap, process_parquet
-from anomaly.utils_pandas import process_csv
+from anomaly.utils_pandas import process_csv, process_connection_csv
 from anomaly.audit_records import audit_records
 from anomaly.models.stats import find_best_features
 
@@ -283,6 +283,8 @@ def get_offline_data(args):
         # concatenate the tuples with map reduce
         x = process_pcap(args.pcap_dir + os.path.sep + '*.pcap')
         y = pd.DataFrame()
+    elif args.conn:
+        x, y = process_connection_csv(args.conn)
 
     return x, y
 
