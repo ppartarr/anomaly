@@ -32,7 +32,10 @@ class GBoost:
         if not self.params:
             self.params = {'learning_rate': 0.15,
                            'verbose': 1,
-                           'n_estimators': 80
+                           'n_estimators': 80,
+                           'tol': 1e-3,
+                           'n_iter_no_change': 1,
+                           'validation_fraction': 0.1
                            #    'num_boost_round': 10
                            }
         self.gboost = GradientBoostingClassifier(**self.params)
