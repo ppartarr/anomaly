@@ -148,7 +148,7 @@ best_30 = [
     'Idle Min'
 ]
 
-all_columns = [
+netflow_columns = [
     # 'Flow ID',
     # 'Src IP',
     # 'Src Port',
@@ -254,4 +254,30 @@ tsv_columns = [
     'arp.dst.proto_ipv4',
     'ipv6.src',
     'ipv6.dst'
+]
+
+
+connection_columns = [
+    # Flow / Connection
+    'TimestampFirst',
+    'LinkProto',
+    'NetworkProto',
+    'TransportProto',
+    'ApplicationProto',
+    # 'SrcMAC',
+    # 'DstMAC',
+    # 'SrcIP',
+    # 'SrcPort',
+    # 'DstIP',
+    'DstPort',
+    'Size',
+    'AppPayloadSize',
+    'NumPackets',
+    'UID',
+    'Duration',
+    'TimestampLast',
+    'BytesClientToServer',
+    'BytesServerToClient',
+    'TotalSize'
+    # 'Category'
 ]

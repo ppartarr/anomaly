@@ -4,7 +4,7 @@ import pandas as pd
 import anomaly.config as config
 
 from anomaly.utils import convert_ip_address_to_decimal, date_to_timestamp, drop_infinity, drop_nan, get_columns
-from anomaly.columns import best_30, all_columns
+from anomaly.columns import best_30, netflow_columns, connection_columns
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -111,7 +111,7 @@ def process_csv(filepath):
         # x = drop_constant_columns(x)
 
         y = process_labels(x.Label)
-        x = get_columns(x, all_columns)
+        x = get_columns(x, netflow_columns)
 
         # x.Timestamp = x.Timestamp.apply(date_to_timestamp)
         # x['Flow ID'] = x['Flow ID'].astype('category').cat.codes
@@ -150,6 +150,8 @@ def process_connection_csv(filepath):
         x = drop_nan(x)
 
         y = x.Category
+
+        x = get_columns(x, connection_columns)
 
         x_list.append(x)
         y_list.append(y)
