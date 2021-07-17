@@ -28,6 +28,7 @@ class SDG:
 
         self.sdg = None
         self.params = None
+        self.name = 'sdg'
 
     def train(self):
         """Train the Support Vector Machine model"""
@@ -49,7 +50,7 @@ class SDG:
         # log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
         # log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
 
-        print_stats_labelled(self.y, guesses, self.y_test)
+        print_stats_labelled(self.y, guesses, self.y_test, self.name, self.params)
 
     def predict(self, x):
         return self.sdg.predict(x)

@@ -33,7 +33,7 @@ class ConnectionFeatureExtractor:
         if not self.encoded:
             num_features = len(self.connection_statistics.get_net_stat_headers())
         else:
-            num_features = 18
+            num_features = 28
 
         log.info('There are {num_headers} features'.format(num_headers=num_features))
         return num_features
@@ -61,11 +61,22 @@ class ConnectionFeatureExtractor:
             'duration': row[14],
             'timestamp_end': row[15],
             'num_client_bytes': row[16],
-            'num_server_bytes': row[17]
+            'num_server_bytes': row[17],
+            'num_fin_flags': row[18],
+            'num_rst_flags': row[19],
+            'num_ack_flags': row[20],
+            'num_syn_flags': row[21],
+            'num_urg_flags': row[22],
+            'num_ece_flags': row[23],
+            'num_psh_flags': row[24],
+            'num_cwr_flags': row[25],
+            'num_ns_flags': row[26],
+            'mean_window_size': row[27],
+
         }
 
         if self.labelled:
-            label = row[18]
+            label = row[28]
         else:
             label = None
 
@@ -102,7 +113,17 @@ class Connection:
                  duration,
                  timestamp_end,
                  num_client_bytes,
-                 num_server_bytes):
+                 num_server_bytes,
+                 num_fin_flags,
+                 num_rst_flags,
+                 num_ack_flags,
+                 num_syn_flags,
+                 num_urg_flags,
+                 num_ece_flags,
+                 num_psh_flags,
+                 num_cwr_flags,
+                 num_ns_flags,
+                 mean_window_size):
 
         self.timestamp_start = np.int64(timestamp_start)
         self.link_protocol = np.int8(convert_protocol_name_to_number(link_protocol))
@@ -122,6 +143,16 @@ class Connection:
         self.timestamp_end = np.int64(check_numeric_empty(timestamp_end))
         self.num_client_bytes = np.int64(check_numeric_empty(num_client_bytes))
         self.num_server_bytes = np.int64(check_numeric_empty(num_server_bytes))
+        self.num_fin_flags = np.int8(check_numeric_empty(num_fin_flags))
+        self.num_rst_flags = np.int8(check_numeric_empty(num_rst_flags))
+        self.num_ack_flags = np.int8(check_numeric_empty(num_ack_flags))
+        self.num_syn_flags = np.int8(check_numeric_empty(num_syn_flags))
+        self.num_urg_flags = np.int8(check_numeric_empty(num_urg_flags))
+        self.num_ece_flags = np.int8(check_numeric_empty(num_ece_flags))
+        self.num_psh_flags = np.int8(check_numeric_empty(num_psh_flags))
+        self.num_cwr_flags = np.int8(check_numeric_empty(num_cwr_flags))
+        self.num_ns_flags = np.int8(check_numeric_empty(num_ns_flags))
+        self.mean_window_size = np.int64(check_numeric_empty(mean_window_size))
 
 
 def check_numeric_empty(data):

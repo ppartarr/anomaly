@@ -27,6 +27,7 @@ class SVM:
 
         self.svm = None
         self.params = None
+        self.name = 'svm'
 
     def train(self):
         """Train the Support Vector Machine model"""
@@ -40,7 +41,7 @@ class SVM:
         classifier = self.svm.fit(self.x_train)
         guesses = classifier.predict(self.x_test)
 
-        print_stats_labelled(self.y, guesses, self.y_test)
+        print_stats_labelled(self.y, guesses, self.y_test, self.name, self.params)
 
     def predict(self, x):
         return self.svm.predict(x)

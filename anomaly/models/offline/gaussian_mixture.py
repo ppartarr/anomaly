@@ -25,6 +25,7 @@ class GMix:
 
         self.gmm = None
         self.params = None
+        self.name = 'gmix'
 
     def train(self):
         """Train & test the Gaussian Mixture Model"""
@@ -43,7 +44,7 @@ class GMix:
         classifier = self.gmm.fit(self.x_train)
         guesses = classifier.predict(self.x_test)
 
-        print_stats_labelled(self.y, guesses, self.y_test)
+        print_stats_labelled(self.y, guesses, self.y_test, self.name, self.params)
 
     def predict(self, x):
         return self.gmm.predict(x)

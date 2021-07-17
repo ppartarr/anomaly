@@ -28,6 +28,7 @@ class LOF:
 
         self.lof = None
         self.params = None
+        self.name = 'lof'
 
     def train(self):
         """Train the Local Outlier Factor model
@@ -54,7 +55,7 @@ class LOF:
         # log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
         # log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
 
-        print_stats_labelled(self.y, guesses, self.y)
+        print_stats_labelled(self.y, guesses, self.y, self.name, self.params)
 
     def predict(self, x):
         return self.lof.predict(x)

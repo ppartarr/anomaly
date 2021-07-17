@@ -278,6 +278,16 @@ connection_columns = [
     'TimestampLast',
     'BytesClientToServer',
     'BytesServerToClient',
-    'TotalSize'
+    'TotalSize',
+    'NumFINFlags',
+    'NumRSTFlags',
+    'NumACKFlags',
+    'NumSYNFlags',
+    'NumURGFlags',
+    'NumECEFlags',
+    'NumPSHFlags',
+    'NumCWRFlags',
+    'NumNSFlags',
+    'MeanWindowSize',
     # 'Category'
 ]

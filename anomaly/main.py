@@ -111,7 +111,9 @@ def train(x, y, model, tune):
     # for unlabelled data
     else:
         x_train, x_test = train_test_split(
-            x, test_size=0.2, shuffle=False)
+            x,
+            test_size=0.2,
+            shuffle=True)
 
         classifier = model(x, y, x_train, x_test, pd.DataFrame(), pd.DataFrame())
         classifier.train()
@@ -183,7 +185,7 @@ def main():
     log.basicConfig(format='%(asctime)s.%(msecs)06d: %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     handlers=[
-                        log.FileHandler("anomaly.log"),
+                        log.FileHandler(config.log_file_path),
                         log.StreamHandler()
                     ],
                     level=log.INFO)

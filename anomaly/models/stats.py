@@ -4,6 +4,8 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.metrics import roc_auc_score, f1_score, confusion_matrix
 import logging as log
 import numpy as np
+import os
+import anomaly.config as config
 from scipy.stats import norm
 
 from matplotlib import pyplot as plt
@@ -18,7 +20,7 @@ def find_best_features(x, x_train, y_train):
     return col_names_selected
 
 
-def print_stats_labelled(y, guesses, y_true):
+def print_stats_labelled(y, guesses, y_true, model, params):
     """Statistics for labelled data"""
     log.info('guess percentage of anomalies: {percentage:.2f}'.format(
         percentage=(100 * np.count_nonzero(guesses == -1)) / len(guesses)))
@@ -37,10 +39,48 @@ def print_stats_labelled(y, guesses, y_true):
 
     cm = confusion_matrix(y_true, guesses)
 
-    log.info('true positives {tp}'.format(tp=cm[1][1]))
-    log.info('true negatives {tn}'.format(tn=cm[0][0]))
-    log.info('false positives {fp}'.format(fp=cm[0][1]))
-    log.info('false negatives {fn}'.format(fn=cm[1][0]))
+    tp = cm[1][1]
+    tn = cm[0][0]
+    fp = cm[0][1]
+    fn = cm[1][0]
+
+    log.info('true positives {tp}'.format(tp=tp))
+    log.info('true negatives {tn}'.format(tn=tn))
+    log.info('false positives {fp}'.format(fp=fp))
+    log.info('false negatives {fn}'.format(fn=fn))
+
+    save_stats(f1, auc, tp, tn, fp, fn, model, params)
+
+
+def save_stats(f1, auroc, tp, tn, fp, fn, model, params):
+    header = 'Model,Params,F1,AUROC,True Positives,True Negatives,False Positives,False Negatives,Precision,Recall\n'
+
+    # calculate recall and precision
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+
+    result = '{model},{params},{f1},{auroc},{tp},{tn},{fp},{fn},{precision},{recall}\n'.format(
+        model=model,
+        params=params,
+        f1=f1,
+        auroc=auroc,
+        tp=tp,
+        tn=tn,
+        fp=fp,
+        fn=fn,
+        precision=precision,
+        recall=recall)
+
+    if os.path.isfile(config.results_file_path):
+        f = open(config.results_file_path, 'a')
+        f.write(result)
+    else:
+        f = open(config.results_file_path, 'w+')
+        f.write(header)
+        f.write(result)
+
+    f.close()
+    log.info('Results saved to {f}'.format(f=config.results_file_path))
 
 
 def count_false_positives(guesses, y_true):
@@ -82,10 +122,17 @@ def print_stats_online(y_true, guesses):
 
     cm = confusion_matrix(y_true, guesses)
 
-    log.info('true positives {tp}'.format(tp=cm[1][1]))
-    log.info('true negatives {tn}'.format(tn=cm[0][0]))
-    log.info('false positives {fp}'.format(fp=cm[0][1]))
-    log.info('false negatives {fn}'.format(fn=cm[1][0]))
+    tp = cm[1][1]
+    tn = cm[0][0]
+    fp = cm[0][1]
+    fn = cm[1][0]
+
+    log.info('true positives {tp}'.format(tp=tp))
+    log.info('true negatives {tn}'.format(tn=tn))
+    log.info('false positives {fp}'.format(fp=fp))
+    log.info('false negatives {fn}'.format(fn=fn))
+
+    save_stats(f1, auc, tp, tn, fp, fn)
 
 
 def plot(model, file_name, root_mean_squared_errors, benign_sample, log_probs, anomaly_detector_training_samples, feature_mapping_training_samples=0):

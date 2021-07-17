@@ -4,7 +4,7 @@ import anomaly.config as config
 import os
 import logging as log
 from anomaly.columns import best_30, tsv_columns
-from anomaly.utils import convert_ip_address_to_decimal, date_to_timestamp, drop_infinity, drop_nan, get_columns, get_tshark_path, pcap2tsv_with_tshark, replace_nan
+from anomaly.utils import convert_ip_address_to_decimal, date_to_timestamp, drop_infinity, drop_nan, get_columns, get_tshark_path, pcap2tsv_with_tshark, process_addresses
 
 
 def process_labels(y):
@@ -34,6 +34,12 @@ def process_labels(y):
 
     y = y.replace(to_replace=labels)
     return y
+
+
+def replace_nan(x):
+    """Replace all the NaN values with -1"""
+    log.info('Processing NaN values...')
+    return x.fillna(-1)
 
 
 def process_parquet(filepath):

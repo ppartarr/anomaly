@@ -52,13 +52,13 @@ def process_netcap_label(y):
 
 def drop_infinity(x):
     """Drop all the Infinity value rows"""
-    log.info('Processing Infinity values...')
+    log.info('Dropping Infinity values...')
     return x[~x.isin([np.inf, -np.inf]).any(1)]
 
 
 def replace_infinity(x):
     """Replace all the Infinity values with the column's max"""
-    log.info('Processing Infinity values...')
+    log.info('Replacing Infinity values...')
     inf_columns = x.columns[np.isinf(x).any()]
     for column in inf_columns:
         # replace Infinity with column max

@@ -29,6 +29,7 @@ class IForest:
 
         self.iforest = None
         self.params = None
+        self.name = 'iforest'
 
     def train(self):
         """Train & test the Isolation Forest model with or without labels"""
@@ -61,7 +62,7 @@ class IForest:
         # log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
         # log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
 
-        print_stats_labelled(self.y, guesses, self.y_test)
+        print_stats_labelled(self.y, guesses, self.y_test, self.name, self.params)
 
     def predict(self, x):
         return self.iforest.predict(x)

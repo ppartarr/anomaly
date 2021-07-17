@@ -43,7 +43,12 @@ class CorrelationCluster:
     # clusters the features together, having no more than maxClust features per cluster
     def cluster(self, maxClust):
         D = self.correlationDistance()
-        Z = linkage(D[np.triu_indices(self.n, 1)])  # create a linkage matrix based on the distance matrix
+        # log.info(maxClust)
+        # log.info(self.n)
+        distance_matrix = D[np.triu_indices(self.n, 1)]
+        # distance_matrix = np.nan_to_num(distance_matrix)
+        # print(np.all(np.isfinite(distance_matrix)))
+        Z = linkage(distance_matrix)  # create a linkage matrix based on the distance matrix
         if maxClust < 1:
             maxClust = 1
         if maxClust > self.n:

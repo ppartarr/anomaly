@@ -24,6 +24,7 @@ class GBoost:
 
         self.gboost = None
         self.params = None
+        self.name = 'gboost'
 
     def train(self):
         """Train & test the Gradient Boosting Model"""
@@ -35,7 +36,8 @@ class GBoost:
                            'n_estimators': 80,
                            'tol': 1e-3,
                            'n_iter_no_change': 1,
-                           'validation_fraction': 0.1
+                           'validation_fraction': 0.1,
+                           #    'ccp_alpha': 0
                            #    'num_boost_round': 10
                            }
         self.gboost = GradientBoostingClassifier(**self.params)
@@ -43,10 +45,7 @@ class GBoost:
         classifier = self.gboost.fit(self.x_train, self.y_train)
         guesses = classifier.predict(self.x_test)
 
-        # log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
-        # log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
-
-        print_stats_labelled(self.y, guesses, self.y_test)
+        print_stats_labelled(self.y, guesses, self.y_test, self.name, self.params)
 
     def predict(self, x):
         return self.gboost.predict(x)

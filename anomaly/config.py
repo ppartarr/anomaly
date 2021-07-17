@@ -26,3 +26,7 @@ blocksize = '16MB'
 memory_limit = '1GB'
 n_workers = 4
 threads_per_worker = 4
+
+# logging & results
+log_file_path = "anomaly.log"
+results_file_path = "results.csv"

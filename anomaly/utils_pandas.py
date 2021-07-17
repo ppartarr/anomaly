@@ -6,6 +6,7 @@ import anomaly.config as config
 from anomaly.utils import convert_ip_address_to_decimal, date_to_timestamp, drop_infinity, drop_nan, get_columns
 from anomaly.columns import best_30, netflow_columns, connection_columns
 from sklearn.preprocessing import LabelEncoder
+from pandas.api.types import is_numeric_dtype, is_string_dtype
 
 
 def process_label(y):
@@ -92,6 +93,26 @@ def drop_constant_columns(x):
     return x
 
 
+def replace_nan(x):
+    """Replace all the NaN values with -1"""
+    log.info('Replace NaN values...')
+    return x.fillna(-1)
+    # for column in x.columns:
+    #     log.info('{col} {t}'.format(col=column, t=x[column].dtype))
+    #     # x[column].fillna(-1)
+    #     if is_numeric_dtype(x[column]):
+    #         mean = x[column].mean()
+    #         x[column] = x[column].fillna(mean)
+    #     elif is_string_dtype(x[column]):
+    #         # TODO: this works for IP addresses but maybe not other object/string types
+    #         x[column].fillna(-1)
+    #     else:
+    #         log.info(x[column].dtype)
+    #         log.info(is_numeric_dtype(x[column]))
+    #         log.info(is_string_dtype(x[column]))
+    #         return x
+
+
 def process_csv(filepath):
     """Ingest the raw csv data and run pre-processing tasks"""
 
@@ -147,7 +168,7 @@ def process_connection_csv(filepath):
 
         x = add_pair_frequency_pandas(x, ['DstPort', 'ApplicationProto'], ['DstPort-Protocol pair'])
         x = drop_infinity(x)
-        x = drop_nan(x)
+        x = replace_nan(x)
 
         y = x.Category
 
@@ -208,14 +229,22 @@ encoders = {
     'SrcPort': encode_numeric_zscore,
     'DstIP': encode_string,
     'DstPort': encode_numeric_zscore,
-    'Size': encode_numeric_zscore,
+    'TotalSize': encode_numeric_zscore,
     'AppPayloadSize': encode_numeric_zscore,
     'NumPackets': encode_numeric_zscore,
-    'UID': encode_string,
     'Duration': encode_numeric_zscore,
     'TimestampLast': encode_numeric_zscore,
     'BytesClientToServer': encode_numeric_zscore,
     'BytesServerToClient': encode_numeric_zscore,
-    'TotalSize': encode_numeric_zscore,
+    'NumFINFlags': encode_numeric_zscore,
+    'NumRSTFlags': encode_numeric_zscore,
+    'NumACKFlags': encode_numeric_zscore,
+    'NumSYNFlags': encode_numeric_zscore,
+    'NumURGFlags': encode_numeric_zscore,
+    'NumECEFlags': encode_numeric_zscore,
+    'NumPSHFlags': encode_numeric_zscore,
+    'NumCWRFlags': encode_numeric_zscore,
+    'NumNSFlags': encode_numeric_zscore,
+    'MeanWindowSize': encode_numeric_zscore,
     'Category': process_netcap_labels,
 }
