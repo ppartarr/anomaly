@@ -49,11 +49,7 @@ class LOF:
 
         self.lof = LocalOutlierFactor(**self.params)
 
-        with joblib.parallel_backend('dask'):
-            guesses = self.lof.fit_predict(self.x)
-
-        # log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
-        # log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
+        guesses = self.lof.fit_predict(self.x)
 
         print_stats_labelled(self.y, guesses, self.y, self.name, self.params)
 

@@ -31,13 +31,13 @@ class GBoost:
         log.info('Training the Gradient Boosting Model')
 
         if not self.params:
-            self.params = {'learning_rate': 0.15,
+            self.params = {'learning_rate': 0.10,
                            'verbose': 1,
-                           'n_estimators': 80,
+                           'n_estimators': 60,
                            'tol': 1e-3,
                            'n_iter_no_change': 1,
                            'validation_fraction': 0.1,
-                           #    'ccp_alpha': 0
+                           'ccp_alpha': 0.5
                            #    'num_boost_round': 10
                            }
         self.gboost = GradientBoostingClassifier(**self.params)

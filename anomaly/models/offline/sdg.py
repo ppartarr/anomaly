@@ -42,13 +42,10 @@ class SDG:
             SGDClassifier(**self.params)
         )
 
-        with joblib.parallel_backend('dask'):
-            classifier = self.sdg.fit(self.x_train, self.y_train)
+        # with joblib.parallel_backend('dask'):
+        classifier = self.sdg.fit(self.x_train, self.y_train)
 
         guesses = classifier.predict(self.x_test)
-
-        # log.info('accuracy {acc}'.format(acc=accuracy_score(self.y_test, guesses)))
-        # log.info('log loss {ll}'.format(ll=log_loss(self.y_test, guesses).mean()))
 
         print_stats_labelled(self.y, guesses, self.y_test, self.name, self.params)
 

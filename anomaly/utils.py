@@ -73,22 +73,6 @@ def drop_nan(x):
     return x[~x.isin([np.nan]).any(1)]
 
 
-def replace_nan(x):
-    """Replace all the NaN values with -1"""
-    log.info('Processing NaN values...')
-    return x.fillna(-1)
-    # for column in x.columns:
-    # log.info('{col} {t}'.format(col=column, t=x[column].dtype))
-    # x[column].fillna(-1)
-    # if is_numeric_dtype(x[column]):
-    #     mean = x[column].mean()
-    #     x[column] = x[column].fillna(mean)
-    # elif is_string_dtype(x[column]):
-    #     # TODO: this works for IP addresses but maybe not other object/string types
-    #     x[column].fillna(-1)
-    # return x
-
-
 def date_to_timestamp(date):
     """Convert a date in the following format 02/03/2018 08:47:38 to a unix timestamp"""
     return pd.Timestamp(date).timestamp()

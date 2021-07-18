@@ -59,9 +59,8 @@ def save_stats(f1, auroc, tp, tn, fp, fn, model, params):
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
 
-    result = '{model},{params},{f1},{auroc},{tp},{tn},{fp},{fn},{precision},{recall}\n'.format(
+    result = '{model},{f1},{auroc},{tp},{tn},{fp},{fn},{precision},{recall},{params}\n'.format(
         model=model,
-        params=params,
         f1=f1,
         auroc=auroc,
         tp=tp,
@@ -69,7 +68,8 @@ def save_stats(f1, auroc, tp, tn, fp, fn, model, params):
         fp=fp,
         fn=fn,
         precision=precision,
-        recall=recall)
+        recall=recall,
+        params=params)
 
     if os.path.isfile(config.results_file_path):
         f = open(config.results_file_path, 'a')
