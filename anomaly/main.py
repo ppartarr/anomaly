@@ -88,7 +88,7 @@ def train(x, y, model, tune):
             x,
             y,
             test_size=0.2,
-            shuffle=False,
+            shuffle=True,
             random_state=42)
 
         # log.info(find_best_features(x, x_train, y_train))
@@ -113,7 +113,8 @@ def train(x, y, model, tune):
         x_train, x_test = train_test_split(
             x,
             test_size=0.2,
-            shuffle=True)
+            shuffle=True,
+            random_state=42)
 
         classifier = model(x, y, x_train, x_test, pd.DataFrame(), pd.DataFrame())
         classifier.train()

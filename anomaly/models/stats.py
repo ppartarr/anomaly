@@ -32,6 +32,11 @@ def print_stats_labelled(y, guesses, y_true, model, params):
         auc = roc_auc_score(y_true, guesses)
         log.info('area under the curve: {auc}'.format(auc=auc))
 
+    # confusion matrix uses 1 for positives and -1 for negatives
+    # but classifiers return 1 for benign and -1 for anom
+    y_true = y_true * -1
+    guesses = guesses * -1
+
     f1 = f1_score(y_true=y_true, y_pred=guesses, average='micro')
     log.info('f1 score: {f1}'.format(f1=f1))
 
